@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "api-gateway"
+    static_configs:
+      - targets: ["api-gateway:8000"]
+  - job_name: "auth-service"
+    static_configs:
+      - targets: ["auth-service:8001"]
+  - job_name: "inference-router"
+    static_configs:
+      - targets: ["inference-router:8002"]
+  - job_name: "billing-service"
+    static_configs:
+      - targets: ["billing-service:8003"]
+  - job_name: "analytics-service"
+    static_configs:
+      - targets: ["analytics-service:8004"]
+  - job_name: "model-registry"
+    static_configs:
+      - targets: ["model-registry:8005"]

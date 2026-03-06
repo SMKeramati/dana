@@ -1,0 +1,23 @@
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #0a0a0a;
+  --background: #ffffff;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+  direction: rtl;
+}
+
+/* Code blocks LTR */
+pre, code, .code-block {
+  direction: ltr;
+  text-align: left;
+}

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-worker
+  namespace: dana
+  labels:
+    app: inference-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inference-worker
+  template:
+    metadata:
+      labels:
+        app: inference-worker
+    spec:
+      nodeSelector:
+        nvidia.com/gpu.present: "true"
+      containers:
+        - name: inference-worker
+          image: dana-inference-worker:latest
+          ports:
+            - containerPort: 8006
+          envFrom:
+            - secretRef:
+                name: dana-secrets
+          resources:
+            requests:
+              cpu: "4000m"
+              memory: "64Gi"
+              nvidia.com/gpu: "2"
+            limits:
+              cpu: "16000m"
+              memory: "512Gi"
+              nvidia.com/gpu: "2"
+          volumeMounts:
+            - name: model-storage
+              mountPath: /models
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: model-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inference-worker
+  namespace: dana
+spec:
+  selector:
+    app: inference-worker
+  ports:
+    - port: 8006
+      targetPort: 8006
+  type: ClusterIP
