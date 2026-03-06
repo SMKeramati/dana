@@ -1,322 +1,214 @@
+"use client";
+
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import {
+  Zap, Shield, Globe, MessageSquare, Code2, Coins,
+  ArrowLeft, Sparkles, Server, Clock, CheckCircle2,
+} from "lucide-react";
+
+const features = [
+  { icon: Code2, title: "سازگار با OpenAI", desc: "از SDK رسمی OpenAI (Python/JS) استفاده کنید. فقط base_url را تغییر دهید.", color: "text-blue-500 bg-blue-500/10" },
+  { icon: Zap, title: "سرعت بالا", desc: "موتور Speculative Decoding اختصاصی. تا ۳ برابر سریع‌تر از استنتاج معمول.", color: "text-amber-500 bg-amber-500/10" },
+  { icon: Shield, title: "حاکمیت داده", desc: "تمام پردازش‌ها روی سرورهای GPU داخل ایران. هیچ داده‌ای به خارج ارسال نمی‌شود.", color: "text-emerald-500 bg-emerald-500/10" },
+  { icon: MessageSquare, title: "پشتیبانی فارسی", desc: "بهینه‌سازی شده برای زبان فارسی. نتایج طبیعی و روان به زبان فارسی.", color: "text-purple-500 bg-purple-500/10" },
+  { icon: Globe, title: "استریم بلادرنگ", desc: "پاسخ‌های استریم SSE. تجربه کاربری سریع و تعاملی مانند ChatGPT.", color: "text-cyan-500 bg-cyan-500/10" },
+  { icon: Coins, title: "قیمت مقرون‌به‌صرفه", desc: "پلن رایگان با ۱,۰۰۰ توکن روزانه. پلن حرفه‌ای از ۴۹۹,۰۰۰ تومان/ماه.", color: "text-rose-500 bg-rose-500/10" },
+];
+
+const stats = [
+  { value: "۲۳۵B", label: "پارامتر مدل", icon: Server },
+  { value: "~۱۵", label: "توکن بر ثانیه", icon: Zap },
+  { value: "۳۲K", label: "طول ورودی", icon: MessageSquare },
+  { value: "۹۹.۵٪", label: "آپتایم", icon: Clock },
+];
+
+const plans = [
+  {
+    name: "رایگان", price: "۰", period: "", desc: "برای آشنایی و تست",
+    features: ["۱,۰۰۰ توکن روزانه", "۵ درخواست در دقیقه", "استریم بلادرنگ", "پشتیبانی انجمن"],
+    cta: "شروع رایگان", variant: "outline" as const, popular: false,
+  },
+  {
+    name: "حرفه‌ای", price: "۴۹۹,۰۰۰", period: "تومان / ماه", desc: "برای توسعه‌دهندگان و تیم‌ها",
+    features: ["۱۰۰,۰۰۰ توکن روزانه", "۶۰ درخواست در دقیقه", "اولویت در صف", "پشتیبانی ایمیل", "SLA ۹۹٪"],
+    cta: "خرید پلن", variant: "primary" as const, popular: true,
+  },
+  {
+    name: "سازمانی", price: "تماس بگیرید", period: "", desc: "برای شرکت‌ها و سازمان‌ها",
+    features: ["توکن نامحدود", "۶۰۰ درخواست در دقیقه", "مدل اختصاصی", "پشتیبانی ۲۴/۷", "SLA ۹۹.۹٪"],
+    cta: "ارتباط با فروش", variant: "outline" as const, popular: false,
+  },
+];
+
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* هدر */}
-      <header className="border-b border-gray-100">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <span className="text-2xl font-bold text-dana-700">دانا</span>
-            <div className="hidden md:flex gap-6 text-sm text-gray-600">
-              <a href="/docs" className="hover:text-dana-600">مستندات</a>
-              <a href="/pricing" className="hover:text-dana-600">تعرفه‌ها</a>
-              <a href="/playground" className="hover:text-dana-600">آزمایشگاه</a>
+    <div className="min-h-screen">
+      <Header />
+
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 grid-pattern" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-dana-500/10 dark:bg-dana-500/5 rounded-full blur-3xl" />
+        <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-28">
+          <div className="text-center max-w-4xl mx-auto animate-fade-in">
+            <Badge className="mb-6 px-4 py-1.5 text-sm">
+              <Sparkles className="w-3.5 h-3.5 ml-1.5" />
+              Qwen3-235B-MoE • زیرساخت ایرانی
+            </Badge>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.15]">
+              مدل‌های هوش مصنوعی
+              <br />
+              <span className="gradient-text">با کیفیت جهانی</span>
+            </h1>
+            <p className="mt-6 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
+              دسترسی به Qwen3-235B-MoE از طریق API سازگار با OpenAI.
+              زیرساخت GPU داخلی، بدون نیاز به VPN، با حاکمیت کامل داده.
+            </p>
+            <div className="mt-8 flex items-center justify-center gap-4 flex-wrap">
+              <Link href="/login">
+                <Button size="lg">
+                  شروع رایگان
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                </Button>
+              </Link>
+              <Link href="/docs">
+                <Button variant="outline" size="lg">مستندات API</Button>
+              </Link>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <a href="/dashboard" className="text-sm text-gray-600 hover:text-dana-600">
-              داشبورد
-            </a>
-            <a
-              href="/dashboard/keys"
-              className="bg-dana-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-dana-700 transition"
-            >
-              دریافت کلید API
-            </a>
-          </div>
-        </nav>
-      </header>
 
-      {/* بخش اصلی (Hero) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="text-center">
-          <div className="inline-block bg-dana-50 text-dana-700 text-sm font-medium px-4 py-1.5 rounded-full mb-6">
-            هوش مصنوعی پیشرفته · زیرساخت ایرانی
-          </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            مدل‌های هوش مصنوعی
-            <br />
-            <span className="text-dana-600">با کیفیت جهانی</span>
-          </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-            دسترسی به Qwen3-235B-MoE از طریق API سازگار با OpenAI.
-            بهینه‌سازی شده با رمزگشایی حدسی و بارگذاری هوشمند خبرگان.
-            ۱۰۰٪ حاکمیت داده.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <a
-              href="/dashboard/keys"
-              className="bg-dana-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-dana-700 transition text-lg"
-            >
-              شروع رایگان
-            </a>
-            <a
-              href="/docs"
-              className="border border-gray-300 text-gray-700 px-8 py-3 rounded-lg font-medium hover:bg-gray-50 transition text-lg"
-            >
-              مستندات API
-            </a>
-          </div>
-        </div>
-
-        {/* نمونه کد */}
-        <div className="mt-16 max-w-3xl mx-auto">
-          <div className="bg-gray-900 rounded-xl overflow-hidden shadow-2xl">
-            <div className="flex items-center gap-2 px-4 py-3 bg-gray-800">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
+          {/* Code Example */}
+          <div className="mt-16 max-w-3xl mx-auto animate-slide-up">
+            <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-950 dark:bg-gray-900 overflow-hidden shadow-2xl glow-dana">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-800">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                </div>
+                <span className="text-xs text-gray-500 mr-2 font-mono">main.py</span>
               </div>
-              <span className="text-gray-400 text-xs mr-2">Python</span>
-            </div>
-            <pre className="p-6 text-sm text-gray-300 overflow-x-auto" dir="ltr">
-              <code>{`from openai import OpenAI
+              <pre className="p-5 text-sm leading-relaxed overflow-x-auto">
+                <code className="text-gray-300">
+{`from openai import OpenAI
 
 client = OpenAI(
     base_url="https://api.dana.ir/v1",
-    api_key="dk-..."  # کلید API دانا
+    api_key="dk-YOUR_KEY"
 )
 
 response = client.chat.completions.create(
     model="qwen3-235b-moe",
     messages=[
-        {"role": "user", "content": "یک تابع مرتب‌سازی سریع بنویس"}
+        {"role": "user", "content": "سلام! یک تابع فیبوناچی بنویس"}
     ],
     stream=True
 )
 
 for chunk in response:
-    print(chunk.choices[0].delta.content, end="")`}</code>
-            </pre>
+    print(chunk.choices[0].delta.content, end="")`}
+                </code>
+              </pre>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ویژگی‌ها */}
-      <section className="bg-gray-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            چرا دانا؟
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "سازگار با OpenAI",
-                desc: "بدون تغییر کد، فقط base_url را عوض کنید. SDK‌های Python و JavaScript پشتیبانی می‌شوند.",
-                icon: "🔌",
-              },
-              {
-                title: "سرعت بالا",
-                desc: "رمزگشایی حدسی (Speculative Decoding) سرعت تولید توکن را تا ۷۰٪ افزایش می‌دهد.",
-                icon: "⚡",
-              },
-              {
-                title: "حاکمیت داده",
-                desc: "تمام داده‌ها روی زیرساخت ایرانی پردازش می‌شوند. هیچ داده‌ای به خارج ارسال نمی‌شود.",
-                icon: "🛡️",
-              },
-              {
-                title: "پشتیبانی از فارسی",
-                desc: "مدل‌های چندزبانه با عملکرد عالی در زبان فارسی برای کدنویسی و پاسخگویی.",
-                icon: "🇮🇷",
-              },
-              {
-                title: "استریم بلادرنگ",
-                desc: "پاسخ‌ها به صورت استریم (SSE) ارسال می‌شوند. WebSocket نیز پشتیبانی می‌شود.",
-                icon: "📡",
-              },
-              {
-                title: "مقرون‌به‌صرفه",
-                desc: "پلن رایگان برای شروع. پلن حرفه‌ای با نرخ رقابتی نسبت به سرویس‌های خارجی.",
-                icon: "💰",
-              },
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="bg-white p-6 rounded-xl border border-gray-100 hover:shadow-lg transition"
-              >
-                <div className="text-3xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {feature.desc}
-                </p>
+      {/* Features */}
+      <section className="py-24 bg-gray-50 dark:bg-gray-900/50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold">چرا دانا؟</h2>
+            <p className="mt-3 text-gray-500 dark:text-gray-400">ابزارهایی که توسعه‌دهندگان ایرانی نیاز دارند</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((f) => (
+              <div key={f.title} className="group p-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-dana-300 dark:hover:border-dana-700 hover:shadow-lg hover:shadow-dana-500/5 transition-all duration-300">
+                <div className={`w-10 h-10 rounded-xl ${f.color} flex items-center justify-center mb-4`}>
+                  <f.icon className="w-5 h-5" />
+                </div>
+                <h3 className="text-base font-semibold mb-2">{f.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* عملکرد */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            مشخصات فنی
-          </h2>
-          <div className="grid md:grid-cols-4 gap-6 text-center">
-            {[
-              { value: "۲۳۵B", label: "پارامتر مدل" },
-              { value: "~۱۵", label: "توکن در ثانیه" },
-              { value: "۳۲K", label: "طول متن ورودی" },
-              { value: "۹۹.۵٪", label: "آپتایم" },
-            ].map((stat, i) => (
-              <div key={i} className="bg-dana-50 p-8 rounded-xl">
-                <div className="text-3xl md:text-4xl font-bold text-dana-700 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600">{stat.label}</div>
+      {/* Stats */}
+      <section className="py-20 bg-gray-950 relative overflow-hidden">
+        <div className="absolute inset-0 grid-pattern opacity-50" />
+        <div className="relative max-w-7xl mx-auto px-6">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">مشخصات فنی</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {stats.map((s) => (
+              <div key={s.label} className="text-center p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                <s.icon className="w-6 h-6 text-dana-400 mx-auto mb-3" />
+                <div className="text-3xl font-bold text-white mb-1">{s.value}</div>
+                <div className="text-sm text-gray-400">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* تعرفه‌ها */}
-      <section className="bg-gray-50 py-20" id="pricing">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-4">
-            تعرفه‌ها
-          </h2>
-          <p className="text-center text-gray-600 mb-12">
-            با پلن رایگان شروع کنید. هر زمان که آماده بودید ارتقا دهید.
-          </p>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                name: "رایگان",
-                price: "۰",
-                features: [
-                  "۱,۰۰۰ توکن در روز",
-                  "۵ درخواست در دقیقه",
-                  "مدل qwen3-235b-moe",
-                  "پشتیبانی انجمن",
-                ],
-                cta: "شروع رایگان",
-                highlight: false,
-              },
-              {
-                name: "حرفه‌ای",
-                price: "۴۹۹,۰۰۰",
-                unit: "تومان/ماه",
-                features: [
-                  "۱۰۰,۰۰۰ توکن در روز",
-                  "۶۰ درخواست در دقیقه",
-                  "مدل qwen3-235b-moe",
-                  "پشتیبانی ایمیل",
-                  "اولویت در صف",
-                ],
-                cta: "شروع دوره آزمایشی",
-                highlight: true,
-              },
-              {
-                name: "سازمانی",
-                price: "تماس",
-                features: [
-                  "توکن نامحدود",
-                  "۶۰۰ درخواست در دقیقه",
-                  "SLA اختصاصی",
-                  "پشتیبانی ۲۴/۷",
-                  "اولویت بالا",
-                  "مدل اختصاصی",
-                ],
-                cta: "تماس با ما",
-                highlight: false,
-              },
-            ].map((plan, i) => (
-              <div
-                key={i}
-                className={`p-8 rounded-xl border ${
-                  plan.highlight
-                    ? "border-dana-500 bg-white shadow-xl scale-105"
-                    : "border-gray-200 bg-white"
-                }`}
-              >
-                {plan.highlight && (
-                  <div className="text-dana-600 text-xs font-medium mb-2">
-                    پرطرفدار
-                  </div>
-                )}
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {plan.name}
-                </h3>
-                <div className="mb-6">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {plan.price}
-                  </span>
-                  {plan.unit && (
-                    <span className="text-gray-500 text-sm mr-1">
-                      {plan.unit}
-                    </span>
-                  )}
+      {/* Pricing */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold">تعرفه‌ها</h2>
+            <p className="mt-3 text-gray-500 dark:text-gray-400">شروع رایگان، ارتقا بر اساس نیاز</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {plans.map((plan) => (
+              <div key={plan.name} className={`relative p-8 rounded-2xl border transition-all duration-300 ${plan.popular ? "border-dana-500 bg-dana-50 dark:bg-dana-950/30 shadow-xl shadow-dana-500/10 scale-[1.02]" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700"}`}>
+                {plan.popular && <div className="absolute -top-3 right-6"><Badge className="px-3 py-1">محبوب‌ترین</Badge></div>}
+                <h3 className="text-xl font-bold">{plan.name}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{plan.desc}</p>
+                <div className="mt-6 mb-6">
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  {plan.period && <span className="text-sm text-gray-500 dark:text-gray-400 mr-2">{plan.period}</span>}
                 </div>
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((f, j) => (
-                    <li key={j} className="text-sm text-gray-600 flex items-center gap-2">
-                      <span className="text-green-500">✓</span>
+                <Link href={plan.name === "سازمانی" ? "#" : "/login"}>
+                  <Button variant={plan.variant} className="w-full">{plan.cta}</Button>
+                </Link>
+                <ul className="mt-6 space-y-3">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                       {f}
                     </li>
                   ))}
                 </ul>
-                <a
-                  href="/dashboard/keys"
-                  className={`block text-center py-2.5 rounded-lg font-medium transition ${
-                    plan.highlight
-                      ? "bg-dana-600 text-white hover:bg-dana-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  }`}
-                >
-                  {plan.cta}
-                </a>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* فوتر */}
-      <footer className="border-t border-gray-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <h4 className="text-lg font-bold text-dana-700 mb-4">دانا</h4>
-              <p className="text-sm text-gray-600">
-                پلتفرم هوش مصنوعی ایرانی. مدل‌های پیشرفته با زیرساخت بومی.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">محصول</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/docs" className="hover:text-dana-600">مستندات API</a></li>
-                <li><a href="/pricing" className="hover:text-dana-600">تعرفه‌ها</a></li>
-                <li><a href="/playground" className="hover:text-dana-600">آزمایشگاه</a></li>
-                <li><a href="/dashboard" className="hover:text-dana-600">داشبورد</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">توسعه‌دهندگان</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="/docs" className="hover:text-dana-600">شروع سریع</a></li>
-                <li><a href="/docs/authentication" className="hover:text-dana-600">احراز هویت</a></li>
-                <li><a href="/docs/chat-completions" className="hover:text-dana-600">Chat Completions</a></li>
-                <li><a href="/docs/sdk" className="hover:text-dana-600">SDK پایتون</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">شرکت</h4>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li><a href="#" className="hover:text-dana-600">درباره ما</a></li>
-                <li><a href="#" className="hover:text-dana-600">تماس</a></li>
-                <li><a href="#" className="hover:text-dana-600">حریم خصوصی</a></li>
-                <li><a href="#" className="hover:text-dana-600">شرایط استفاده</a></li>
-              </ul>
-            </div>
+      {/* CTA */}
+      <section className="py-20 bg-gradient-to-b from-dana-600 to-dana-800 relative overflow-hidden">
+        <div className="absolute inset-0 grid-pattern opacity-20" />
+        <div className="relative max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold text-white">همین الان شروع کنید</h2>
+          <p className="mt-4 text-dana-100">با یک کلید API رایگان، اولین درخواست خود را در کمتر از ۳۰ ثانیه ارسال کنید.</p>
+          <div className="mt-8">
+            <Link href="/login">
+              <Button size="lg" className="!bg-white !text-dana-700 hover:!bg-gray-100 shadow-xl">
+                ساخت حساب رایگان
+                <ArrowLeft className="w-4 h-4 mr-2" />
+              </Button>
+            </Link>
           </div>
-          <div className="border-t border-gray-100 mt-8 pt-8 text-center text-sm text-gray-500">
-            © ۱۴۰۵ دانا. تمامی حقوق محفوظ است.
-          </div>
+          <p className="mt-4 text-sm text-dana-200">بدون نیاز به کارت بانکی</p>
         </div>
-      </footer>
+      </section>
+
+      <Footer />
     </div>
   );
 }

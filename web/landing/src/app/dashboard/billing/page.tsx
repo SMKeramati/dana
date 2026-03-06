@@ -1,63 +1,105 @@
+"use client";
+
+import { Card, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { Crown, CreditCard, FileText, ArrowUpRight, Zap, Hash } from "lucide-react";
+
 export default function BillingPage() {
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <a href="/" className="text-2xl font-bold text-dana-700">دانا</a>
-            <div className="flex gap-6 text-sm text-gray-600">
-              <a href="/dashboard" className="hover:text-dana-600">داشبورد</a>
-              <a href="/dashboard/usage" className="hover:text-dana-600">مصرف</a>
-              <a href="/dashboard/keys" className="hover:text-dana-600">کلیدهای API</a>
-              <a href="/dashboard/billing" className="text-dana-600 font-medium">صورتحساب</a>
+    <div className="p-6 lg:p-8 max-w-4xl">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold">صورتحساب و پرداخت</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">پلن، روش پرداخت و فاکتورهای خود را مدیریت کنید</p>
+      </div>
+
+      {/* Current Plan */}
+      <div>
+        <Card className="mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center">
+                <Crown className="w-6 h-6 text-purple-500" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <CardTitle>پلن فعلی</CardTitle>
+                  <Badge>رایگان</Badge>
+                </div>
+                <CardDescription className="mt-1">۱,۰۰۰ توکن/روز • ۵ درخواست/دقیقه</CardDescription>
+              </div>
             </div>
+            <Link href="/pricing">
+              <Button size="sm">
+                ارتقا به حرفه‌ای
+                <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
+              </Button>
+            </Link>
           </div>
-        </nav>
-      </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">صورتحساب و پرداخت</h1>
-
-        {/* پلن فعلی */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-          <h2 className="font-semibold text-gray-900 mb-4">پلن فعلی</h2>
-          <div className="flex items-center justify-between">
+          {/* Usage Bars */}
+          <div className="mt-6 grid sm:grid-cols-2 gap-4">
             <div>
-              <span className="text-lg font-bold text-gray-900">رایگان</span>
-              <span className="text-sm text-gray-500 mr-2">
-                ۱,۰۰۰ توکن/روز · ۵ درخواست/دقیقه
-              </span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <Zap className="w-3.5 h-3.5" />
+                  توکن مصرفی امروز
+                </div>
+                <span className="text-xs font-medium">۰ / ۱,۰۰۰</span>
+              </div>
+              <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full" style={{ width: "0%" }} />
+              </div>
             </div>
-            <a
-              href="/pricing"
-              className="bg-dana-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-dana-700"
-            >
-              ارتقا به حرفه‌ای
-            </a>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                  <Hash className="w-3.5 h-3.5" />
+                  درخواست‌های این دقیقه
+                </div>
+                <span className="text-xs font-medium">۰ / ۵</span>
+              </div>
+              <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: "0%" }} />
+              </div>
+            </div>
           </div>
-        </div>
+        </Card>
+      </div>
 
-        {/* روش پرداخت */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-          <h2 className="font-semibold text-gray-900 mb-4">روش پرداخت</h2>
-          <p className="text-sm text-gray-600 mb-4">
-            برای ارتقا به پلن حرفه‌ای یا سازمانی، یک روش پرداخت اضافه کنید.
-          </p>
-          <button className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">
-            افزودن روش پرداخت (زرین‌پال)
-          </button>
-        </div>
+      {/* Payment Method */}
+      <div>
+        <Card className="mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+              <CreditCard className="w-6 h-6 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <CardTitle>روش پرداخت</CardTitle>
+              <CardDescription className="mt-1">برای ارتقا به پلن حرفه‌ای یا سازمانی، یک روش پرداخت اضافه کنید.</CardDescription>
+              <Button variant="outline" size="sm" className="mt-4">
+                <CreditCard className="w-3.5 h-3.5 ml-1.5" />
+                افزودن روش پرداخت (زرین‌پال)
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
 
-        {/* تاریخچه فاکتورها */}
-        <div className="bg-white rounded-xl border border-gray-200">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">تاریخچه فاکتورها</h2>
+      {/* Invoice History */}
+      <div>
+        <Card>
+          <CardTitle className="mb-4">تاریخچه فاکتورها</CardTitle>
+          <div className="text-center py-12">
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+              <FileText className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">هنوز فاکتوری صادر نشده.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">پس از خرید پلن، فاکتورها اینجا نمایش داده می‌شوند.</p>
           </div>
-          <div className="p-12 text-center text-gray-400">
-            هنوز فاکتوری صادر نشده.
-          </div>
-        </div>
-      </main>
+        </Card>
+      </div>
     </div>
   );
 }

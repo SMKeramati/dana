@@ -1,77 +1,143 @@
+"use client";
+
+import { Card, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { Activity, Hash, Clock, TrendingUp, BarChart3 } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const periods = [
+  { label: "۲۴ ساعت", value: "24h" },
+  { label: "۷ روز", value: "7d" },
+  { label: "۳۰ روز", value: "30d" },
+  { label: "۹۰ روز", value: "90d" },
+];
+
+const chartData = [
+  { name: "شنبه", tokens: 0, requests: 0 },
+  { name: "یکشنبه", tokens: 0, requests: 0 },
+  { name: "دوشنبه", tokens: 0, requests: 0 },
+  { name: "سه‌شنبه", tokens: 0, requests: 0 },
+  { name: "چهارشنبه", tokens: 0, requests: 0 },
+  { name: "پنجشنبه", tokens: 0, requests: 0 },
+  { name: "جمعه", tokens: 0, requests: 0 },
+];
+
+const statCards = [
+  { label: "کل توکن‌های مصرفی", value: "۰", icon: Activity, color: "text-blue-500 bg-blue-500/10", change: null },
+  { label: "تعداد درخواست‌ها", value: "۰", icon: Hash, color: "text-emerald-500 bg-emerald-500/10", change: null },
+  { label: "میانگین تاخیر", value: "— ms", icon: Clock, color: "text-amber-500 bg-amber-500/10", change: null },
+];
+
 export default function UsagePage() {
+  const [period, setPeriod] = useState("24h");
+  const [chartView, setChartView] = useState<"tokens" | "requests">("tokens");
+
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <a href="/" className="text-2xl font-bold text-dana-700">دانا</a>
-            <div className="flex gap-6 text-sm text-gray-600">
-              <a href="/dashboard" className="hover:text-dana-600">داشبورد</a>
-              <a href="/dashboard/usage" className="text-dana-600 font-medium">مصرف</a>
-              <a href="/dashboard/keys" className="hover:text-dana-600">کلیدهای API</a>
-              <a href="/dashboard/billing" className="hover:text-dana-600">صورتحساب</a>
-            </div>
-          </div>
-        </nav>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">آمار مصرف</h1>
-
-        {/* فیلتر زمانی */}
-        <div className="flex gap-2 mb-6">
-          {["۲۴ ساعت", "۷ روز", "۳۰ روز", "۹۰ روز"].map((period, i) => (
+    <div className="p-6 lg:p-8 max-w-6xl">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold">آمار مصرف</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">جزئیات مصرف API خود را مشاهده کنید</p>
+        </div>
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+          {periods.map((p) => (
             <button
-              key={i}
-              className={`px-4 py-2 rounded-lg text-sm ${
-                i === 0
-                  ? "bg-dana-600 text-white"
-                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-              }`}
+              key={p.value}
+              onClick={() => setPeriod(p.value)}
+              className={cn(
+                "px-3 py-1.5 text-xs rounded-lg transition-all cursor-pointer",
+                period === p.value
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm font-medium"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              )}
             >
-              {period}
+              {p.label}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* خلاصه */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {[
-            { label: "کل توکن‌های مصرفی", value: "۰" },
-            { label: "تعداد درخواست‌ها", value: "۰" },
-            { label: "میانگین تاخیر", value: "— ms" },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white p-6 rounded-xl border border-gray-200">
-              <div className="text-sm text-gray-500 mb-1">{stat.label}</div>
-              <div className="text-3xl font-bold text-gray-900">{stat.value}</div>
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        {statCards.map((stat, i) => (
+          <div key={stat.label}>
+            <Card>
+              <div className="flex items-start justify-between mb-3">
+                <div className={`w-9 h-9 rounded-xl ${stat.color} flex items-center justify-center`}>
+                  <stat.icon className="w-4.5 h-4.5" />
+                </div>
+                {stat.change && (
+                  <Badge variant="success" className="text-[10px]">
+                    <TrendingUp className="w-3 h-3 ml-1" />
+                    {stat.change}
+                  </Badge>
+                )}
+              </div>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.label}</div>
+            </Card>
+          </div>
+        ))}
+      </div>
+
+      {/* Chart */}
+      <div>
+        <Card className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <CardTitle>نمودار مصرف</CardTitle>
+            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+              <button onClick={() => setChartView("tokens")} className={cn("px-3 py-1 text-xs rounded-md transition-all cursor-pointer", chartView === "tokens" ? "bg-white dark:bg-gray-700 shadow-sm" : "text-gray-500")}>
+                توکن
+              </button>
+              <button onClick={() => setChartView("requests")} className={cn("px-3 py-1 text-xs rounded-md transition-all cursor-pointer", chartView === "requests" ? "bg-white dark:bg-gray-700 shadow-sm" : "text-gray-500")}>
+                درخواست
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              {chartView === "tokens" ? (
+                <AreaChart data={chartData}>
+                  <defs>
+                    <linearGradient id="usageGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0c87f0" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#0c87f0" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={40} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
+                  <Area type="monotone" dataKey="tokens" stroke="#0c87f0" strokeWidth={2} fill="url(#usageGrad)" />
+                </AreaChart>
+              ) : (
+                <BarChart data={chartData}>
+                  <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={40} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
+                  <Bar dataKey="requests" fill="#10b981" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">اولین درخواست API خود را ارسال کنید تا آمار شروع شود</p>
+        </Card>
+      </div>
 
-        {/* نمودار */}
-        <div className="bg-white rounded-xl border border-gray-200 p-8">
-          <h2 className="font-semibold text-gray-900 mb-6">نمودار مصرف</h2>
-          <div className="h-64 flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <div className="text-4xl mb-2">📊</div>
-              <p>هنوز داده‌ای برای نمایش وجود ندارد.</p>
-              <p className="text-sm mt-1">
-                اولین درخواست API خود را ارسال کنید تا آمار شروع شود.
-              </p>
+      {/* Recent Requests */}
+      <div>
+        <Card>
+          <CardTitle className="mb-4">آخرین درخواست‌ها</CardTitle>
+          <div className="text-center py-12">
+            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-3">
+              <BarChart3 className="w-6 h-6 text-gray-400 dark:text-gray-500" />
             </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">هنوز درخواستی ثبت نشده.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">اولین درخواست API خود را ارسال کنید.</p>
           </div>
-        </div>
-
-        {/* جدول درخواست‌ها */}
-        <div className="bg-white rounded-xl border border-gray-200 mt-8">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">آخرین درخواست‌ها</h2>
-          </div>
-          <div className="p-12 text-center text-gray-400">
-            هنوز درخواستی ثبت نشده.
-          </div>
-        </div>
-      </main>
+        </Card>
+      </div>
     </div>
   );
 }
