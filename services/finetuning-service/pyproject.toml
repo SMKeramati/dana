@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dana-finetuning-service"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "dana-common",
+    "fastapi>=0.104",
+    "uvicorn>=0.24",
+    "torch>=2.1",
+    "transformers>=4.36",
+    "peft>=0.7",
+    "datasets>=2.15",
+    "accelerate>=0.25",
+    "bitsandbytes>=0.41",
+    "trl>=0.7",
+    "safetensors>=0.4",
+    "boto3>=1.28",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

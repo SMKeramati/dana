@@ -63,12 +63,35 @@ class ChatCompletionRequest(BaseModel):
     top_p: float = 1.0
     frequency_penalty: float = 0.0
     presence_penalty: float = 0.0
+    logprobs: bool = False
+    top_logprobs: int | None = None  # 0-20, OpenAI-compatible
+
+
+class TopLogprob(BaseModel):
+    """Top alternative token with its log probability."""
+    token: str
+    logprob: float
+    bytes: list[int] | None = None
+
+
+class TokenLogprob(BaseModel):
+    """Log probability for a single token (OpenAI-compatible)."""
+    token: str
+    logprob: float
+    bytes: list[int] | None = None
+    top_logprobs: list[TopLogprob] = Field(default_factory=list)
+
+
+class ChoiceLogprobs(BaseModel):
+    """Logprobs container for a choice (OpenAI-compatible)."""
+    content: list[TokenLogprob] | None = None
 
 
 class ChatChoice(BaseModel):
     index: int = 0
     message: ChatMessage
     finish_reason: str = "stop"
+    logprobs: ChoiceLogprobs | None = None
 
 
 class UsageInfo(BaseModel):
