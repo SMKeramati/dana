@@ -3,10 +3,40 @@
 import { Card, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { useBilling } from "@/hooks/use-billing";
 import { Crown, CreditCard, FileText, ArrowUpRight, Zap, Hash } from "lucide-react";
+import { toPersianDigits } from "@/lib/utils";
+
+const tierLabels: Record<string, string> = {
+  free: "رایگان",
+  pro: "حرفه‌ای",
+  enterprise: "سازمانی",
+};
 
 export default function BillingPage() {
+  const { user, loading: authLoading } = useAuth();
+  const { plans, loading: plansLoading } = useBilling();
+
+  const loading = authLoading || plansLoading;
+  const tier = user?.tier || "free";
+  const currentPlan = plans.find((p) => p.id === tier);
+  const dailyLimit = currentPlan?.daily_token_limit ?? 1000;
+  const rpmLimit = currentPlan?.rpm_limit ?? 5;
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8 max-w-4xl">
+        <Skeleton className="h-8 w-48 mb-2" />
+        <Skeleton className="h-4 w-64 mb-8" />
+        <Skeleton className="h-48 rounded-2xl mb-6" />
+        <Skeleton className="h-32 rounded-2xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 max-w-4xl">
       <div className="mb-8">
@@ -17,7 +47,7 @@ export default function BillingPage() {
       {/* Current Plan */}
       <div>
         <Card className="mb-6">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center">
                 <Crown className="w-6 h-6 text-purple-500" />
@@ -25,17 +55,21 @@ export default function BillingPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <CardTitle>پلن فعلی</CardTitle>
-                  <Badge>رایگان</Badge>
+                  <Badge>{tierLabels[tier] || tier}</Badge>
                 </div>
-                <CardDescription className="mt-1">۱,۰۰۰ توکن/روز • ۵ درخواست/دقیقه</CardDescription>
+                <CardDescription className="mt-1">
+                  {toPersianDigits(dailyLimit.toLocaleString())} توکن/روز • {toPersianDigits(rpmLimit.toString())} درخواست/دقیقه
+                </CardDescription>
               </div>
             </div>
-            <Link href="/pricing">
-              <Button size="sm">
-                ارتقا به حرفه‌ای
-                <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
-              </Button>
-            </Link>
+            {tier === "free" && (
+              <Link href="/pricing">
+                <Button size="sm">
+                  ارتقا به حرفه‌ای
+                  <ArrowUpRight className="w-3.5 h-3.5 mr-1.5" />
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Usage Bars */}
@@ -46,7 +80,7 @@ export default function BillingPage() {
                   <Zap className="w-3.5 h-3.5" />
                   توکن مصرفی امروز
                 </div>
-                <span className="text-xs font-medium">۰ / ۱,۰۰۰</span>
+                <span className="text-xs font-medium">{toPersianDigits("0")} / {toPersianDigits(dailyLimit.toLocaleString())}</span>
               </div>
               <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div className="h-full bg-blue-500 rounded-full" style={{ width: "0%" }} />
@@ -58,7 +92,7 @@ export default function BillingPage() {
                   <Hash className="w-3.5 h-3.5" />
                   درخواست‌های این دقیقه
                 </div>
-                <span className="text-xs font-medium">۰ / ۵</span>
+                <span className="text-xs font-medium">{toPersianDigits("0")} / {toPersianDigits(rpmLimit.toString())}</span>
               </div>
               <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: "0%" }} />
@@ -72,7 +106,7 @@ export default function BillingPage() {
       <div>
         <Card className="mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
               <CreditCard className="w-6 h-6 text-emerald-500" />
             </div>
             <div className="flex-1">

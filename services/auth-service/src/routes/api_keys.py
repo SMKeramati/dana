@@ -53,7 +53,7 @@ async def create_api_key(
     )
 
 
-@router.get("/auth/api-keys", response_model=list[dict])
+@router.get("/auth/api-keys")
 async def list_api_keys(authorization: str = Header(...)) -> list[dict]:
     user_id = await _get_user_id(authorization)
     keys = await repository.get_user_api_keys(user_id)
@@ -68,3 +68,14 @@ async def list_api_keys(authorization: str = Header(...)) -> list[dict]:
         }
         for k in keys
     ]
+
+
+@router.delete("/auth/api-keys/{key_id}", status_code=204)
+async def delete_api_key(
+    key_id: int,
+    authorization: str = Header(...),
+) -> None:
+    user_id = await _get_user_id(authorization)
+    deleted = await repository.delete_api_key(key_id, user_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="API key not found")

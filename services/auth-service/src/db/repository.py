@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from dana_common import config
-from sqlalchemy import select, update
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from .models import APIKey, Base, User
@@ -81,3 +81,23 @@ async def update_api_key_last_used(key_hash: str) -> None:
             .values(last_used=datetime.utcnow())
         )
         await session.commit()
+
+
+async def delete_api_key(key_id: int, user_id: int) -> bool:
+    async with async_session() as session:
+        result = await session.execute(
+            delete(APIKey).where(
+                and_(APIKey.id == key_id, APIKey.user_id == user_id)
+            )
+        )
+        await session.commit()
+        return result.rowcount > 0
+
+
+async def update_user_tier(user_id: int, tier: str) -> User | None:
+    async with async_session() as session:
+        await session.execute(
+            update(User).where(User.id == user_id).values(tier=tier)
+        )
+        await session.commit()
+        return await get_user_by_id(user_id)

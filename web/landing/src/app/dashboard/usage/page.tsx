@@ -1,42 +1,58 @@
 "use client";
 
 import { Card, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
+import { useUsage } from "@/hooks/use-usage";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Activity, Hash, Clock, TrendingUp, BarChart3 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Activity, Hash, Clock, BarChart3 } from "lucide-react";
+import { cn, toPersianDigits } from "@/lib/utils";
 
 const periods = [
-  { label: "۲۴ ساعت", value: "24h" },
-  { label: "۷ روز", value: "7d" },
-  { label: "۳۰ روز", value: "30d" },
-  { label: "۹۰ روز", value: "90d" },
+  { label: "\u06F2\u06F4 \u0633\u0627\u0639\u062A", value: "24h" },
+  { label: "\u06F7 \u0631\u0648\u0632", value: "7d" },
+  { label: "\u06F3\u06F0 \u0631\u0648\u0632", value: "30d" },
+  { label: "\u06F9\u06F0 \u0631\u0648\u0632", value: "90d" },
 ];
 
-const chartData = [
-  { name: "شنبه", tokens: 0, requests: 0 },
-  { name: "یکشنبه", tokens: 0, requests: 0 },
-  { name: "دوشنبه", tokens: 0, requests: 0 },
-  { name: "سه‌شنبه", tokens: 0, requests: 0 },
-  { name: "چهارشنبه", tokens: 0, requests: 0 },
-  { name: "پنجشنبه", tokens: 0, requests: 0 },
-  { name: "جمعه", tokens: 0, requests: 0 },
-];
-
-const statCards = [
-  { label: "کل توکن‌های مصرفی", value: "۰", icon: Activity, color: "text-blue-500 bg-blue-500/10", change: null },
-  { label: "تعداد درخواست‌ها", value: "۰", icon: Hash, color: "text-emerald-500 bg-emerald-500/10", change: null },
-  { label: "میانگین تاخیر", value: "— ms", icon: Clock, color: "text-amber-500 bg-amber-500/10", change: null },
-];
+const dayNames = ["\u0634\u0646\u0628\u0647", "\u06CC\u06A9\u0634\u0646\u0628\u0647", "\u062F\u0648\u0634\u0646\u0628\u0647", "\u0633\u0647\u200C\u0634\u0646\u0628\u0647", "\u0686\u0647\u0627\u0631\u0634\u0646\u0628\u0647", "\u067E\u0646\u062C\u0634\u0646\u0628\u0647", "\u062C\u0645\u0639\u0647"];
 
 export default function UsagePage() {
-  const [period, setPeriod] = useState("24h");
+  const [period, setPeriod] = useState("7d");
   const [chartView, setChartView] = useState<"tokens" | "requests">("tokens");
+  const { data, loading } = useUsage(period);
+
+  const chartData = data?.daily?.map((d, i) => ({
+    name: dayNames[i % 7] || d.date,
+    tokens: d.tokens,
+    requests: d.requests,
+  })) || dayNames.map((name) => ({ name, tokens: 0, requests: 0 }));
+
+  const totalTokens = data?.total_tokens ?? 0;
+  const totalRequests = data?.total_requests ?? 0;
+
+  const statCards = [
+    { label: "\u06A9\u0644 \u062A\u0648\u06A9\u0646\u200C\u0647\u0627\u06CC \u0645\u0635\u0631\u0641\u06CC", value: toPersianDigits(totalTokens.toLocaleString()), icon: Activity, color: "text-blue-500 bg-blue-500/10" },
+    { label: "\u062A\u0639\u062F\u0627\u062F \u062F\u0631\u062E\u0648\u0627\u0633\u062A\u200C\u0647\u0627", value: toPersianDigits(totalRequests.toLocaleString()), icon: Hash, color: "text-emerald-500 bg-emerald-500/10" },
+    { label: "\u0645\u06CC\u0627\u0646\u06AF\u06CC\u0646 \u062A\u0627\u062E\u06CC\u0631", value: "\u2014 ms", icon: Clock, color: "text-amber-500 bg-amber-500/10" },
+  ];
+
+  if (loading) {
+    return (
+      <div className="p-6 lg:p-8 max-w-6xl">
+        <Skeleton className="h-8 w-48 mb-2" />
+        <Skeleton className="h-4 w-64 mb-8" />
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+        </div>
+        <Skeleton className="h-80 rounded-2xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-bold">آمار مصرف</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">جزئیات مصرف API خود را مشاهده کنید</p>
@@ -60,20 +76,14 @@ export default function UsagePage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {statCards.map((stat, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        {statCards.map((stat) => (
           <div key={stat.label}>
             <Card>
               <div className="flex items-start justify-between mb-3">
                 <div className={`w-9 h-9 rounded-xl ${stat.color} flex items-center justify-center`}>
                   <stat.icon className="w-4.5 h-4.5" />
                 </div>
-                {stat.change && (
-                  <Badge variant="success" className="text-[10px]">
-                    <TrendingUp className="w-3 h-3 ml-1" />
-                    {stat.change}
-                  </Badge>
-                )}
               </div>
               <div className="text-2xl font-bold">{stat.value}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{stat.label}</div>
@@ -121,7 +131,9 @@ export default function UsagePage() {
               )}
             </ResponsiveContainer>
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">اولین درخواست API خود را ارسال کنید تا آمار شروع شود</p>
+          {totalTokens === 0 && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 text-center">اولین درخواست API خود را ارسال کنید تا آمار شروع شود</p>
+          )}
         </Card>
       </div>
 

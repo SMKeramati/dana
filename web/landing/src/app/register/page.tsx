@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -14,14 +15,21 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
+  const { register } = useAuth();
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError("");
+    const result = await register(email, password);
+    if (result.ok) {
       router.push("/dashboard");
-    }, 800);
+    } else {
+      setError(result.error || "خطا در ثبت‌نام");
+      setLoading(false);
+    }
   }
 
   return (
@@ -42,6 +50,11 @@ export default function RegisterPage() {
 
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium mb-1.5 block">نام</label>
               <Input

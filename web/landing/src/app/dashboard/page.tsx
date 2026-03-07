@@ -3,16 +3,18 @@
 import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth";
+import { useApiKeys } from "@/hooks/use-api-keys";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { Zap, Hash, Clock, Crown, ArrowLeft, Key, BookOpen, CheckCircle2, Circle } from "lucide-react";
 
-const statCards = [
-  { label: "توکن مصرفی امروز", value: "۰ / ۱,۰۰۰", icon: Zap, color: "text-blue-500 bg-blue-500/10" },
-  { label: "درخواست‌های امروز", value: "۰", icon: Hash, color: "text-emerald-500 bg-emerald-500/10" },
-  { label: "میانگین تاخیر", value: "— ms", icon: Clock, color: "text-amber-500 bg-amber-500/10" },
-  { label: "پلن فعلی", value: "رایگان", icon: Crown, color: "text-purple-500 bg-purple-500/10" },
-];
+const tierLabels: Record<string, string> = {
+  free: "رایگان",
+  pro: "حرفه‌ای",
+  enterprise: "سازمانی",
+};
 
 const chartData = [
   { name: "شنبه", tokens: 0 },
@@ -24,31 +26,51 @@ const chartData = [
   { name: "جمعه", tokens: 0 },
 ];
 
-const onboardingSteps = [
-  { label: "یک کلید API بسازید", href: "/dashboard/keys", done: false, icon: Key },
-  { label: "اولین درخواست خود را ارسال کنید", href: "/playground", done: false, icon: Zap },
-  { label: "مستندات را بخوانید", href: "/docs", done: false, icon: BookOpen },
-];
-
 export default function DashboardPage() {
+  const { user, loading: authLoading } = useAuth();
+  const { keys, loading: keysLoading } = useApiKeys();
+
+  const tier = user?.tier || "free";
+  const hasKeys = keys.length > 0;
+
+  const statCards = [
+    { label: "توکن مصرفی امروز", value: "۰ / ۱,۰۰۰", icon: Zap, color: "text-blue-500 bg-blue-500/10" },
+    { label: "درخواست‌های امروز", value: "۰", icon: Hash, color: "text-emerald-500 bg-emerald-500/10" },
+    { label: "میانگین تاخیر", value: "— ms", icon: Clock, color: "text-amber-500 bg-amber-500/10" },
+    { label: "پلن فعلی", value: tierLabels[tier] || tier, icon: Crown, color: "text-purple-500 bg-purple-500/10" },
+  ];
+
+  const onboardingSteps = [
+    { label: "یک کلید API بسازید", href: "/dashboard/keys", done: hasKeys, icon: Key },
+    { label: "اولین درخواست خود را ارسال کنید", href: "/playground", done: false, icon: Zap },
+    { label: "مستندات را بخوانید", href: "/docs", done: false, icon: BookOpen },
+  ];
+
+  if (authLoading) {
+    return (
+      <div className="p-6 lg:p-8 max-w-6xl">
+        <Skeleton className="h-32 rounded-2xl mb-8" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 lg:p-8 max-w-6xl">
       {/* Welcome */}
-      <div
-       
-       
-        className="mb-8 p-6 rounded-2xl bg-gradient-to-l from-dana-600 to-dana-500 text-white relative overflow-hidden"
-      >
+      <div className="mb-8 p-6 rounded-2xl bg-gradient-to-l from-dana-600 to-dana-500 text-white relative overflow-hidden">
         <div className="absolute inset-0 grid-pattern opacity-20" />
         <div className="relative">
-          <h1 className="text-2xl font-bold">سلام! خوش آمدید 👋</h1>
+          <h1 className="text-2xl font-bold">سلام{user?.email ? ` ${user.email}` : ""}! خوش آمدید 👋</h1>
           <p className="mt-2 text-dana-100 text-sm">از داشبورد دانا برای مدیریت کلیدها، مصرف و صورتحساب استفاده کنید.</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map((stat, i) => (
+        {statCards.map((stat) => (
           <div key={stat.label}>
             <Card className="hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">

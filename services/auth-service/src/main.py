@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from .db.repository import init_db
 from .routes.api_keys import router as api_keys_router
 from .routes.login import router as login_router
+from .routes.profile import router as profile_router
 from .routes.register import router as register_router
 
 
@@ -24,6 +25,7 @@ app = FastAPI(title="Dana Auth Service", version="0.1.0", lifespan=lifespan)
 
 app.include_router(register_router, tags=["auth"])
 app.include_router(login_router, tags=["auth"])
+app.include_router(profile_router, tags=["auth"])
 app.include_router(api_keys_router, tags=["api-keys"])
 
 
