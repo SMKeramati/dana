@@ -1,0 +1,72 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: dana
+    environment: production
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  # === Service health metrics ===
+  - job_name: "api-gateway"
+    static_configs:
+      - targets: ["api-gateway:8000"]
+    metrics_path: /metrics
+
+  - job_name: "auth-service"
+    static_configs:
+      - targets: ["auth-service:8001"]
+    metrics_path: /metrics
+
+  - job_name: "inference-router"
+    static_configs:
+      - targets: ["inference-router:8002"]
+    metrics_path: /metrics
+
+  - job_name: "billing-service"
+    static_configs:
+      - targets: ["billing-service:8003"]
+    metrics_path: /metrics
+
+  - job_name: "analytics-service"
+    static_configs:
+      - targets: ["analytics-service:8004"]
+    metrics_path: /metrics
+
+  - job_name: "model-registry"
+    static_configs:
+      - targets: ["model-registry:8005"]
+    metrics_path: /metrics
+
+  # === Uptime probing via Blackbox Exporter ===
+  - job_name: "blackbox-http"
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - http://api-gateway:8000/health
+          - http://auth-service:8001/health
+          - http://inference-router:8002/health
+          - http://billing-service:8003/health
+          - http://analytics-service:8004/health
+          - http://model-registry:8005/health
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+
+  # === Infrastructure ===
+  - job_name: "blackbox-exporter"
+    static_configs:
+      - targets: ["blackbox-exporter:9115"]
+
+  - job_name: "clickhouse"
+    static_configs:
+      - targets: ["clickhouse:8123"]
+    metrics_path: /metrics

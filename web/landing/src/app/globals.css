@@ -1,0 +1,92 @@
+@import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground: #0a0a0a;
+    --background: #ffffff;
+  }
+
+  .dark {
+    --foreground: #fafafa;
+    --background: #09090b;
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: "Vazirmatn", Tahoma, Arial, sans-serif;
+    direction: rtl;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better focus outlines */
+  *:focus-visible {
+    outline: 2px solid #0c87f0;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Code blocks LTR */
+pre, code, .code-block {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+/* Gradient text utility */
+.gradient-text {
+  background: linear-gradient(to left, #36a5ff, #006bcd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Grid background pattern */
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+.dark .grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+}
+
+/* Glow effects */
+.glow-dana {
+  box-shadow: 0 0 60px -12px rgba(12, 135, 240, 0.25);
+}
+
+.dark .glow-dana {
+  box-shadow: 0 0 60px -12px rgba(12, 135, 240, 0.15);
+}

@@ -1,0 +1,51 @@
+# Rename this file to .gitignore when ready to activate
+# cp .gitignore.example .gitignore
+
+# Environment
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+
+# Model weights (large files)
+/models/
+*.gguf
+*.safetensors
+*.bin
+
+# Test
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Benchmarks results (keep structure, ignore results)
+benchmarks/results/*.json

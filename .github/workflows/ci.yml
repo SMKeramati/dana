@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ruff
+      - run: ruff check packages/ services/
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx python-dotenv
+      - name: Typecheck packages and services
+        env:
+          MYPYPATH: packages/dana-common/src
+        run: |
+          mypy packages/dana-common/src --ignore-missing-imports
+          for svc in services/*/; do
+            if [ -d "$svc/src" ]; then
+              echo "Typechecking $(basename $svc)..."
+              mypy "$svc/src" --ignore-missing-imports
+            fi
+          done
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: dana_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          # Services with heavy ML deps (torch, etc.) are tested separately
+          SKIP_SERVICES="finetuning-service"
+          pip install -e packages/dana-common[test]
+          pip install -e packages/dana-sdk[test] 2>/dev/null || true
+          for svc in services/*/; do
+            svc_name=$(basename "$svc")
+            if echo "$SKIP_SERVICES" | grep -qw "$svc_name"; then
+              echo "Skipping $svc_name (heavy ML deps)"
+              continue
+            fi
+            if [ -f "$svc/pyproject.toml" ]; then
+              pip install -e "$svc[test]"
+            fi
+          done
+      - name: Run tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: dana_test
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          REDIS_PASSWORD: ""
+          JWT_SECRET_KEY: test_secret
+          JWT_ALGORITHM: HS512
+          API_KEY_SALT: test_salt
+          ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef"
+          ENVIRONMENT: test
+        run: |
+          SKIP_SERVICES="finetuning-service"
+          python -m pytest packages/ -v --tb=short
+          for svc in services/*/; do
+            svc_name=$(basename "$svc")
+            if echo "$SKIP_SERVICES" | grep -qw "$svc_name"; then
+              continue
+            fi
+            if [ -d "$svc/tests" ]; then
+              echo "Testing $svc_name..."
+              (cd "$svc" && python -m pytest tests/ -v --tb=short)
+            fi
+          done
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker images
+        run: |
+          for svc in services/*/; do
+            svc_name=$(basename "$svc")
+            dockerfile="$svc/Dockerfile"
+            if [ -f "$dockerfile" ]; then
+              echo "Building $svc_name..."
+              docker build -f "$dockerfile" -t "dana-$svc_name:test" .
+            fi
+          done
+
+  frontend-lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/landing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/landing/package-lock.json
+      - run: npm ci
+      - run: npx eslint .
+      - run: npx tsc --noEmit
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/landing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/landing/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit
+      - run: bandit -r packages/dana-common/src services/*/src -ll --skip B101,B104,B108,B310,B615
