@@ -69,8 +69,16 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: |
+          # Services with heavy ML deps (torch, etc.) are tested separately
+          SKIP_SERVICES="finetuning-service"
           pip install -e packages/dana-common[test]
+          pip install -e packages/dana-sdk[test] 2>/dev/null || true
           for svc in services/*/; do
+            svc_name=$(basename "$svc")
+            if echo "$SKIP_SERVICES" | grep -qw "$svc_name"; then
+              echo "Skipping $svc_name (heavy ML deps)"
+              continue
+            fi
             if [ -f "$svc/pyproject.toml" ]; then
               pip install -e "$svc[test]"
             fi
@@ -91,10 +99,15 @@ jobs:
           ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef"
           ENVIRONMENT: test
         run: |
+          SKIP_SERVICES="finetuning-service"
           python -m pytest packages/ -v --tb=short
           for svc in services/*/; do
+            svc_name=$(basename "$svc")
+            if echo "$SKIP_SERVICES" | grep -qw "$svc_name"; then
+              continue
+            fi
             if [ -d "$svc/tests" ]; then
-              echo "Testing $(basename $svc)..."
+              echo "Testing $svc_name..."
               (cd "$svc" && python -m pytest tests/ -v --tb=short)
             fi
           done

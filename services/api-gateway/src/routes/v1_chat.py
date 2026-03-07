@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
+from collections.abc import AsyncIterator
 
 from dana_common.models import (
     ChatChoice,
@@ -68,7 +69,7 @@ async def _stream_response(
     created: int,
     model: str,
     messages: list[ChatMessage],
-) -> object:
+) -> AsyncIterator[str]:
     """Stream SSE chunks in OpenAI format."""
     response_text = _generate_placeholder_response(messages)
     words = response_text.split()

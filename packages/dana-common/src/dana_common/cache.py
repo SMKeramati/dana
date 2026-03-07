@@ -25,7 +25,7 @@ class CacheManager:
         raw = self._redis.get(full_key)
         if raw is None:
             return None
-        return json.loads(raw)
+        return json.loads(str(raw))
 
     def set(
         self, namespace: str, key: str, value: Any, ttl: int | None = None
@@ -46,7 +46,7 @@ class CacheManager:
         keys = self._redis.smembers(ns_key)
         if not keys:
             return 0
-        count: int = self._redis.delete(*keys)
+        count: int = self._redis.delete(*keys)  # type: ignore[assignment,misc]
         self._redis.delete(ns_key)
         return count
 
@@ -99,7 +99,7 @@ class SlidingWindowCounter:
         now = time.time()
         window_start = now - window_seconds
         self._redis.zremrangebyscore(key, 0, window_start)
-        result: int = self._redis.zcard(key)
+        result: int = self._redis.zcard(key)  # type: ignore[assignment]
         return result
 
     def close(self) -> None:

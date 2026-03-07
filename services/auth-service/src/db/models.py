@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import DeclarativeBase, relationship
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -13,26 +15,26 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
-    tier = Column(String(20), nullable=False, default="free")
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    tier: Mapped[str] = mapped_column(String(20), default="free")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
+    api_keys: Mapped[list[APIKey]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class APIKey(Base):
     __tablename__ = "api_keys"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    name = Column(String(100), nullable=False)
-    key_hash = Column(String(64), unique=True, nullable=False, index=True)
-    key_prefix = Column(String(10), nullable=False)  # e.g., "dk-p12"
-    permissions = Column(Text, nullable=False, default="chat")  # comma-separated
-    created_at = Column(DateTime, server_default=func.now())
-    last_used = Column(DateTime, nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    name: Mapped[str] = mapped_column(String(100))
+    key_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    key_prefix: Mapped[str] = mapped_column(String(10))  # e.g., "dk-p12"
+    permissions: Mapped[str] = mapped_column(Text, default="chat")  # comma-separated
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    last_used: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    user = relationship("User", back_populates="api_keys")
+    user: Mapped[User] = relationship(back_populates="api_keys")

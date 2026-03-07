@@ -91,7 +91,7 @@ async def delete_api_key(key_id: int, user_id: int) -> bool:
             )
         )
         await session.commit()
-        return result.rowcount > 0
+        return result.rowcount > 0  # type: ignore[attr-defined]
 
 
 async def update_user_tier(user_id: int, tier: str) -> User | None:

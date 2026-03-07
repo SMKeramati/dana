@@ -109,7 +109,8 @@ class MessageConsumer:
                     body = json.loads(message.body)
                     await handler(body)
                 except Exception:
-                    retry_count = (message.headers or {}).get("x-retry-count", 0)
+                    raw_retry = (message.headers or {}).get("x-retry-count", 0)
+                    retry_count = raw_retry if isinstance(raw_retry, int) else 0
                     if retry_count < max_retries:
                         logger.warning(
                             "Retrying message (attempt %d/%d)",

@@ -95,8 +95,10 @@ class QuotaManager:
             return -1
         end
         """
-        result = await self._redis.eval(lua, 1, rkey, str(tokens), str(limit), str(ttl))
-        result = int(result)
+        raw = await self._redis.eval(  # type: ignore[misc]
+            lua, 1, rkey, str(tokens), str(limit), str(ttl),
+        )
+        result = int(raw)
 
         if result == -1:
             current = int(await self._redis.get(rkey) or 0)
