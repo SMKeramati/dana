@@ -9,5 +9,6 @@ build/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+*.tsbuildinfo
 web/landing/.next/
 web/landing/node_modules/
