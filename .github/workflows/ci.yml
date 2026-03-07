@@ -24,10 +24,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: |
-          pip install -e packages/dana-common
-          pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx
+      - run: pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx python-dotenv
       - name: Typecheck packages and services
+        env:
+          MYPYPATH: packages/dana-common/src
         run: |
           mypy packages/dana-common/src --ignore-missing-imports
           for svc in services/*/; do

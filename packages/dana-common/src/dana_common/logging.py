@@ -82,6 +82,10 @@ class StructuredLogger:
     def critical(self, msg: str, *args: Any, **kwargs: Any) -> None:
         self._log(logging.CRITICAL, msg, *args, **kwargs)
 
+    def exception(self, msg: str, *args: Any, **kwargs: Any) -> None:
+        kwargs.setdefault("exc_info", True)
+        self._log(logging.ERROR, msg, *args, **kwargs)
+
     def isEnabledFor(self, level: int) -> bool:
         return self._logger.isEnabledFor(level)
 

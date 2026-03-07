@@ -48,5 +48,6 @@ async def refresh_token(authorization: str = Header(...)) -> dict[str, Any]:
         user_id=user.id,
         email=user.email,
         tier=user.tier,
+        permissions=payload.get("perms", ["chat", "models"]),
     )
     return {"access_token": new_token, "token_type": "bearer"}
