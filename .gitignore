@@ -1,2 +1,13 @@
+__pycache__/
+*.pyc
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+*.so
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 web/landing/.next/
 web/landing/node_modules/
