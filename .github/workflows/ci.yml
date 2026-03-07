@@ -24,7 +24,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx
+      - run: |
+          pip install -e packages/dana-common
+          pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx
       - name: Typecheck packages and services
         run: |
           mypy packages/dana-common/src --ignore-missing-imports
@@ -125,7 +127,7 @@ jobs:
           cache: npm
           cache-dependency-path: web/landing/package-lock.json
       - run: npm ci
-      - run: npx next lint
+      - run: npx eslint .
       - run: npx tsc --noEmit
 
   frontend-build:
