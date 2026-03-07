@@ -1,6 +1,8 @@
 """Model registry service -- FastAPI application (port 8005)."""
 from __future__ import annotations
 
+from typing import Any
+
 from dana_common.logging import get_logger
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -24,7 +26,7 @@ class RegisterRequest(BaseModel):
     model_name: str
     version: str
     endpoint_url: str
-    metadata: dict | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class PromoteRequest(BaseModel):
@@ -35,7 +37,7 @@ class PromoteRequest(BaseModel):
 class ABTestCreateRequest(BaseModel):
     experiment_id: str
     model_name: str
-    variants: list[dict]
+    variants: list[dict[str, Any]]
     confidence_level: float = 0.95
 
 
@@ -55,13 +57,13 @@ async def health() -> dict[str, str]:
 
 
 @app.post("/v1/models/register")
-async def register_model(req: RegisterRequest) -> dict:
+async def register_model(req: RegisterRequest) -> dict[str, Any]:
     mv = _store.register(req.model_name, req.version, req.endpoint_url, req.metadata)
     return {"model_name": mv.model_name, "version": mv.version, "status": mv.status.value}
 
 
 @app.post("/v1/models/promote")
-async def promote_model(req: PromoteRequest) -> dict:
+async def promote_model(req: PromoteRequest) -> dict[str, Any]:
     try:
         mv = _store.promote(req.model_name, req.version)
     except ValueError as exc:
@@ -70,7 +72,7 @@ async def promote_model(req: PromoteRequest) -> dict:
 
 
 @app.post("/v1/models/{model_name}/rollback")
-async def rollback_model(model_name: str) -> dict:
+async def rollback_model(model_name: str) -> dict[str, Any]:
     try:
         mv = _store.rollback(model_name)
     except ValueError as exc:
@@ -79,7 +81,7 @@ async def rollback_model(model_name: str) -> dict:
 
 
 @app.get("/v1/models/{model_name}/active")
-async def get_active_model(model_name: str) -> dict:
+async def get_active_model(model_name: str) -> dict[str, Any]:
     mv = _store.get_active(model_name)
     if mv is None:
         raise HTTPException(status_code=404, detail=f"No active version for {model_name}")
@@ -92,7 +94,7 @@ async def get_active_model(model_name: str) -> dict:
 
 
 @app.get("/v1/models/{model_name}/versions")
-async def list_versions(model_name: str) -> list[dict]:
+async def list_versions(model_name: str) -> list[dict[str, Any]]:
     return [
         {"version": mv.version, "status": mv.status.value, "endpoint_url": mv.endpoint_url}
         for mv in _store.list_versions(model_name)
@@ -109,7 +111,7 @@ async def list_models() -> list[str]:
 # ------------------------------------------------------------------
 
 @app.post("/v1/ab-tests")
-async def create_ab_test(req: ABTestCreateRequest) -> dict:
+async def create_ab_test(req: ABTestCreateRequest) -> dict[str, Any]:
     test = _ab_router.create_experiment(
         experiment_id=req.experiment_id,
         model_name=req.model_name,
@@ -120,7 +122,7 @@ async def create_ab_test(req: ABTestCreateRequest) -> dict:
 
 
 @app.post("/v1/ab-tests/route/{experiment_id}")
-async def route_ab_test(experiment_id: str) -> dict:
+async def route_ab_test(experiment_id: str) -> dict[str, Any]:
     test = _ab_router.get_experiment(experiment_id)
     if test is None:
         raise HTTPException(status_code=404, detail="Experiment not found")
@@ -129,7 +131,7 @@ async def route_ab_test(experiment_id: str) -> dict:
 
 
 @app.post("/v1/ab-tests/outcome")
-async def record_outcome(req: ABTestOutcomeRequest) -> dict:
+async def record_outcome(req: ABTestOutcomeRequest) -> dict[str, Any]:
     test = _ab_router.get_experiment(req.experiment_id)
     if test is None:
         raise HTTPException(status_code=404, detail="Experiment not found")
@@ -146,7 +148,7 @@ async def record_outcome(req: ABTestOutcomeRequest) -> dict:
 
 
 @app.get("/v1/ab-tests/{experiment_id}")
-async def get_ab_test(experiment_id: str) -> dict:
+async def get_ab_test(experiment_id: str) -> dict[str, Any]:
     test = _ab_router.get_experiment(experiment_id)
     if test is None:
         raise HTTPException(status_code=404, detail="Experiment not found")

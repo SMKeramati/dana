@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Header, HTTPException
 
 from ..crypto.token_engine import token_engine
@@ -10,7 +12,7 @@ from ..db import repository
 router = APIRouter()
 
 
-async def _get_payload(authorization: str) -> dict:
+async def _get_payload(authorization: str) -> dict[str, Any]:
     """Extract full payload from Bearer token."""
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
@@ -22,7 +24,7 @@ async def _get_payload(authorization: str) -> dict:
 
 
 @router.get("/auth/me")
-async def get_profile(authorization: str = Header(...)) -> dict:
+async def get_profile(authorization: str = Header(...)) -> dict[str, Any]:
     payload = await _get_payload(authorization)
     user = await repository.get_user_by_id(payload["sub"])
     if user is None:
@@ -36,7 +38,7 @@ async def get_profile(authorization: str = Header(...)) -> dict:
 
 
 @router.post("/auth/refresh")
-async def refresh_token(authorization: str = Header(...)) -> dict:
+async def refresh_token(authorization: str = Header(...)) -> dict[str, Any]:
     payload = await _get_payload(authorization)
     user = await repository.get_user_by_id(payload["sub"])
     if user is None:

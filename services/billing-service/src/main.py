@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 from dana_common.logging import get_logger
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from .metering.token_counter import count_tokens
+from .metering.token_counter import TokenCounter
 from .metering.usage_aggregator import TimeWindow, UsageAggregator, UsageRecord
 from .plans.pricing import PricingEngine
 from .plans.subscription import PLAN_CATALOGUE, PlanTier
@@ -19,6 +20,7 @@ app = FastAPI(title="Dana Billing Service", version="0.1.0")
 # In-process singletons (replaced by DI in production)
 _aggregator = UsageAggregator()
 _pricing = PricingEngine()
+_counter = TokenCounter()
 
 
 # ------------------------------------------------------------------
@@ -61,42 +63,40 @@ async def health() -> dict[str, str]:
 
 @app.post("/v1/usage", response_model=UsageResponse)
 async def record_usage(req: UsageRequest) -> UsageResponse:
-    tc = count_tokens(
-        prompt=req.prompt,
-        completion=req.completion,
+    tc = _counter.count(
+        input_text=req.prompt,
+        output_text=req.completion,
         model=req.model,
-        exact_prompt_tokens=req.exact_prompt_tokens,
-        exact_completion_tokens=req.exact_completion_tokens,
     )
 
     record = UsageRecord(
         org_id=req.tenant_id,
         model=req.model,
-        input_tokens=tc.prompt_tokens,
-        output_tokens=tc.completion_tokens,
+        input_tokens=tc.input_tokens,
+        output_tokens=tc.output_tokens,
         timestamp=datetime.now(UTC).timestamp(),
     )
     _aggregator.ingest(record)
 
     price = _pricing.compute(
         model=req.model,
-        prompt_tokens=tc.prompt_tokens,
-        completion_tokens=tc.completion_tokens,
+        prompt_tokens=tc.input_tokens,
+        completion_tokens=tc.output_tokens,
         tier=PlanTier.FREE,
     )
 
     return UsageResponse(
         tenant_id=req.tenant_id,
         model=req.model,
-        prompt_tokens=tc.prompt_tokens,
-        completion_tokens=tc.completion_tokens,
+        prompt_tokens=tc.input_tokens,
+        completion_tokens=tc.output_tokens,
         total_tokens=tc.total_tokens,
         cost_cents=round(price.total_cents, 6),
     )
 
 
 @app.get("/v1/usage/{tenant_id}")
-async def get_usage(tenant_id: str, window: str = "monthly") -> dict:
+async def get_usage(tenant_id: str, window: str = "monthly") -> dict[str, Any]:
     try:
         tw = TimeWindow(window)
     except ValueError:

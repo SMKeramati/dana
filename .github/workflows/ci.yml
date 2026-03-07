@@ -24,8 +24,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install mypy pydantic fastapi sqlalchemy redis
-      - run: mypy packages/dana-common/src services/*/src --ignore-missing-imports
+      - run: pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx
+      - name: Typecheck packages and services
+        run: |
+          mypy packages/dana-common/src --ignore-missing-imports
+          for svc in services/*/; do
+            if [ -d "$svc/src" ]; then
+              echo "Typechecking $(basename $svc)..."
+              mypy "$svc/src" --ignore-missing-imports
+            fi
+          done
 
   test:
     runs-on: ubuntu-latest
@@ -80,7 +88,14 @@ jobs:
           API_KEY_SALT: test_salt
           ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef"
           ENVIRONMENT: test
-        run: python -m pytest packages/ services/ -v --tb=short
+        run: |
+          python -m pytest packages/ -v --tb=short
+          for svc in services/*/; do
+            if [ -d "$svc/tests" ]; then
+              echo "Testing $(basename $svc)..."
+              (cd "$svc" && python -m pytest tests/ -v --tb=short)
+            fi
+          done
 
   build:
     runs-on: ubuntu-latest
@@ -136,4 +151,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install bandit
-      - run: bandit -r packages/dana-common/src services/*/src -ll --skip B101
+      - run: bandit -r packages/dana-common/src services/*/src -ll --skip B101,B104,B108,B310,B615

@@ -46,7 +46,7 @@ class CacheManager:
         keys = self._redis.smembers(ns_key)
         if not keys:
             return 0
-        count = self._redis.delete(*keys)
+        count: int = self._redis.delete(*keys)
         self._redis.delete(ns_key)
         return count
 
@@ -99,7 +99,8 @@ class SlidingWindowCounter:
         now = time.time()
         window_start = now - window_seconds
         self._redis.zremrangebyscore(key, 0, window_start)
-        return self._redis.zcard(key)
+        result: int = self._redis.zcard(key)
+        return result
 
     def close(self) -> None:
         self._redis.close()

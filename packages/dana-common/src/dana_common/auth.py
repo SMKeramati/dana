@@ -83,7 +83,8 @@ class TokenEngine:
             data += "=" * padding
         try:
             raw = base64.urlsafe_b64decode(data)
-            return json.loads(raw)
+            result: dict[str, Any] = json.loads(raw)
+            return result
         except Exception:
             return None
 

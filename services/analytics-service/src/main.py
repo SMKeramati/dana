@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from dana_common.logging import get_logger
 from fastapi import FastAPI
@@ -39,7 +40,7 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/v1/stats")
-async def stats() -> dict:
+async def stats() -> dict[str, Any]:
     return {
         "events_ingested": _pipeline.events_ingested,
         "anomaly_detector_window_size": len(_anomaly_detector._window),

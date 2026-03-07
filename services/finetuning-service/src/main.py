@@ -4,6 +4,8 @@ Daneshbonyan: Internal R&D - Custom Model Training Platform
 """
 from __future__ import annotations
 
+from typing import Any
+
 from dana_common.models import HealthResponse
 from fastapi import FastAPI
 
@@ -20,7 +22,7 @@ async def health() -> HealthResponse:
 
 
 @app.get("/api/v1/finetune/status")
-async def finetune_status() -> dict:
+async def finetune_status() -> dict[str, Any]:
     return {
         "service": "finetuning-service",
         "supported_methods": ["lora", "qlora"],

@@ -39,7 +39,7 @@ class EncryptionEngine:
             salt=struct.pack(">I", version),
             info=context,
         )
-        key = hkdf.derive(self._master_key)
+        key: bytes = hkdf.derive(self._master_key)
         self._keys[version] = key
         return key
 
@@ -65,7 +65,7 @@ class EncryptionEngine:
         if key is None:
             key = self._derive_key(version)
         aesgcm = AESGCM(key)
-        plaintext = aesgcm.decrypt(nonce, ciphertext, None)
+        plaintext: bytes = aesgcm.decrypt(nonce, ciphertext, None)
         return plaintext.decode("utf-8")
 
     def rotate_key(self) -> int:

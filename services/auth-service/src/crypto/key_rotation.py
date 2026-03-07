@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from typing import Any
 
 from dana_common.auth import TokenEngine
 
@@ -41,7 +42,7 @@ class KeyRotationManager:
                 v.expired_at = now + (grace_period_hours * 3600)
         self._add_version(new_key)
 
-    def verify_token(self, token: str) -> dict | None:
+    def verify_token(self, token: str) -> dict[str, Any] | None:
         """Try all active key versions (newest first)."""
         now = time.time()
         for version in reversed(self._versions):

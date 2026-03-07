@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from dana_common.models import APIKeyCreate, APIKeyResponse
 from fastapi import APIRouter, Header, HTTPException
 
@@ -54,7 +56,7 @@ async def create_api_key(
 
 
 @router.get("/auth/api-keys")
-async def list_api_keys(authorization: str = Header(...)) -> list[dict]:
+async def list_api_keys(authorization: str = Header(...)) -> list[dict[str, Any]]:
     user_id = await _get_user_id(authorization)
     keys = await repository.get_user_api_keys(user_id)
     return [

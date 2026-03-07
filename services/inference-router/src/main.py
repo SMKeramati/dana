@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from dana_common.logging import setup_logging
 from dana_common.models import HealthResponse
@@ -56,7 +57,7 @@ async def health() -> HealthResponse:
 
 
 @app.get("/health/detailed")
-async def health_detailed() -> dict:
+async def health_detailed() -> dict[str, Any]:
     """Extended health check with worker and queue stats."""
     return {
         "status": "ok",

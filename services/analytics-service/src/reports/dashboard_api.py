@@ -1,6 +1,8 @@
 """API endpoints for dashboard metrics."""
 from __future__ import annotations
 
+from typing import Any
+
 from dana_common.logging import get_logger
 from fastapi import APIRouter, Query
 
@@ -30,7 +32,7 @@ async def dashboard_usage(
     tenant_id: str,
     window: str = Query("hour", description="Rollup window: minute, hour, day, month"),
     model: str | None = Query(None, description="Optional model filter"),
-) -> dict:
+) -> dict[str, Any]:
     pipeline = _get_pipeline()
     try:
         rw = RollupWindow(window)
@@ -46,7 +48,7 @@ async def dashboard_usage(
 
 
 @router.get("/summary/{tenant_id}")
-async def dashboard_summary(tenant_id: str) -> dict:
+async def dashboard_summary(tenant_id: str) -> dict[str, Any]:
     pipeline = _get_pipeline()
     daily = pipeline.query(tenant_id, RollupWindow.DAY)
     total_tokens = sum(b.total_tokens for b in daily)
