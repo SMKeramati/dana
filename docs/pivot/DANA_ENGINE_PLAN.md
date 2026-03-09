@@ -788,6 +788,60 @@ Run on real MoE model on GPU. Lives in `dana-engine/colab/`.
 
 ---
 
+## Prioritization: Expected Value Ranking
+
+Ranked by **value × confidence** only. Effort is treated as free — this is purely about which outcomes matter most and which we're most confident will deliver.
+
+### Scoring Method
+
+- **Value (1-10):** How much does this product contribute to the overall thesis? Considers: engine speedup, OSS traction, ecosystem lock-in, revenue enablement, thesis de-risking.
+- **Confidence (0-1):** How likely is it that the approach actually works as theorized? High confidence = well-understood engineering. Low confidence = novel research with unproven assumptions.
+- **Score = Value × Confidence** (max 10.0)
+
+### The Ranking
+
+| Priority | Product | Value | Confidence | Score | Reasoning |
+|---|---|---|---|---|---|
+| **1** | `moe-router-predict` | 10 | 0.90 | **9.0** | 5x speedup alone. Proves the entire core thesis: "prediction eliminates I/O stalls." Router-only forward pass uses the exact same learned weights — no approximation. If this fails, the whole project is dead. If it works, everything else compounds on top. Highest-value single product by far. |
+| **2** | `dana-engine` (Phase 0 baseline) | 9 | 0.95 | **8.6** | Not optional — every other product needs this to test against. Zero research risk (it's just a small model + naive loop). But value is a 9 not a 10 because it produces no speedup itself — it's the "before" photo. |
+| **3** | `moe-quant` | 8.5 | 0.85 | **7.2** | 2.5x additional speedup from reduced transfer sizes. Per-expert sensitivity profiling is a novel angle, but quantization itself is deeply well-studied — we're standing on shoulders. Huge OSS community (quantization people are LOUD on Twitter). Could be the highest-star repo of all 6. Also de-risks the claim that Q2 is usable for cold experts. |
+| **4** | `moe-self-draft` | 9.5 | 0.70 | **6.7** | The single most novel idea in the entire project. If top-1 expert draft really gives 85% acceptance (vs 70% for separate draft models), this is a breakthrough — zero memory cost, higher quality drafts, AND it creates a free prefetch window. But it's unproven. Nobody has published this. The 85% number is a hypothesis based on "same router = same distribution minus one expert." Needs validation ASAP. Build early to de-risk. |
+| **5** | `expert-cache` | 7 | 0.90 | **6.3** | 2.5x additional on top of prefetching. Predictive caching is a well-understood concept (frequency-aware + lookahead hints). High confidence. But it's incremental — LRU already gives you 60% hit rate, we're pushing to 90%+. The jump from 60→90% matters, but it's not as dramatic as the 0→5x from prefetching. Solid OSS library, reliable value. |
+| **6** | `spec-decode-tree` | 8.5 | 0.70 | **6.0** | Big multiplier (7 tokens/step vs 4). But tree verification is genuinely tricky — attention mask construction for tree structures is complex, branching heuristics need tuning, and the overhead of generating + verifying a tree could eat the gains if not carefully managed. Depends on `moe-self-draft` working first (tree × self-draft = the real combo). The limited-release strategy (reference impl only) is correct — publish the idea, keep the fast version. |
+| **7** | `tiered-tensor-store` | 5.5 | 0.95 | **5.2** | Highest confidence of any product (storage hierarchies are textbook engineering), but lowest direct value to the engine thesis. It's plumbing. The VRAM/RAM/SSD hierarchy is necessary, but it doesn't *create* speedup by itself — it enables other products to exploit the tiers. Broadest OSS audience (works for any large model, not just MoE), which makes it valuable for ecosystem building. Build it, but it's not what proves the thesis. |
+| **8** | `dana-engine` (Phase 6 integration) | 10 | 0.80 | **8.0** | This is literally the revenue product. Expert-aware batching is the API moat. Pipeline orchestration is where the 50x multiplier comes from. Value is maximum 10. But confidence is 0.80 because it depends on all 6 other products working AND composing well — any weak link reduces the multiplicative effect. Build last, when all components are proven. |
+
+### What This Ranking Tells Us
+
+**The critical path is: Phase 0 → Product 1 → Product 4 → Product 6.**
+
+That's: baseline → prefetching → self-draft → integration. These four steps prove or kill the thesis.
+
+- **Phase 0 + Product 1** proves: "Prediction eliminates I/O bottleneck." (Score: 9.0)
+- **Product 4 (moe-self-draft)** proves: "You don't need a separate draft model for MoE." (Score: 6.7, but it's the riskiest novel claim — de-risk it early)
+- **Product 3 (moe-quant)** proves: "Aggressive per-expert quantization is safe." (Score: 7.2)
+- **Everything else** is stacking multipliers on a proven foundation.
+
+**The "don't get fooled" products:** `expert-cache` and `tiered-tensor-store` feel important because they're tangible and reliable, but they're incremental. The engine lives or dies on prefetch prediction accuracy and self-draft acceptance rates. Don't let comfortable engineering work distract from validating the hard research bets.
+
+### Recommended Build Order (value × confidence optimized)
+
+```
+Phase 0:  dana-engine baseline          ← must exist, zero risk
+Phase 1:  moe-router-predict            ← proves core thesis (9.0)
+Phase 2:  moe-self-draft                ← de-risks biggest unknown (6.7 but highest upside)
+Phase 3:  moe-quant                     ← stacks on prefetch, reliable (7.2)
+Phase 4:  spec-decode-tree              ← multiplies self-draft (6.0)
+Phase 5:  expert-cache                  ← incremental win (6.3)
+Phase 6:  tiered-tensor-store           ← plumbing, broadest OSS (5.2)
+Phase 7:  dana-engine integration       ← compose everything (8.0)
+Phase 8:  Colab validation              ← prove it on real model
+```
+
+Note: This reorders the original phases. `moe-self-draft` moves up from Phase 5 to Phase 2 because it's the riskiest novel claim — if top-1 drafting doesn't give 85% acceptance, we need to know NOW, not after building 4 other products. `tiered-tensor-store` drops from Phase 3 to Phase 6 because it's reliable plumbing that can be built anytime without affecting the thesis.
+
+---
+
 ## Speculative Decoding: Deep Dive on "Smarter & More"
 
 Standard speculative decoding guesses ~4-5 tokens at ~70% acceptance = ~3 free tokens/step.
