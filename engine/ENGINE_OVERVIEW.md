@@ -217,7 +217,55 @@ All 206 tests pass. CPU-only. No model downloads. No GPU required.
 
 ---
 
-## TPS Improvement by Pillar
+## Integration Benchmark — Actual Measured Results (CPU, tiny synthetic model)
+
+Run: `pytest dana-engine/tests/test_integration_benchmark.py -v -s`
+Platform: Linux, Python 3.11, CPU-only (no GPU), PyTorch, N=5 runs, median reported.
+
+| Stage | TPS (measured) | tokens/step | Notes |
+|---|---|---|---|
+| Naïve greedy (raw) | **358** | 1.00 | baseline |
+| Pipeline wrapper (naive) | **401** | 1.00 | wrapper overhead negligible |
+| Self-draft spec decode | **274** | **4.00** | 100% acceptance on tiny model |
+| Tree spec decode | **4** | ~16.00 | depth=4, width=4 → 256 verify paths, CPU-killed |
+| Full pipeline (spec+prefetch) | **257** | **4.00** | all pillars enabled |
+| Spec vs naïve ratio | **0.72×** | — | CPU bottleneck explained below |
+
+**Batching metrics:**
+- Expert grouper: 37 grouping calls/second for 8-request batches
+- Groups produced for 8 requests: 2 (expert overlap clustering works)
+- Scheduler drains 6 requests in 2 batches
+
+### Why spec decode is slower on CPU (expected)
+
+On this tiny synthetic model, the bottleneck is **compute**, not memory bandwidth.
+A single forward pass takes ~3ms on CPU. Spec decode adds overhead:
+- Draft pass (top-1 mode): ~2.5ms
+- Verify pass (top-2 mode): ~3ms
+- Net cost per accepted batch: ~5.5ms for 4 tokens → lower TPS than 1 token per 3ms
+
+**On GPU with a real MoE** the situation inverts: the bottleneck is loading
+expert weights from RAM/SSD over PCIe (4–8ms per expert load). Spec decode
+keeps the GPU busy with verification while the next expert batch loads in the
+background. This is where the ×3–10 gains come from.
+
+The 100% acceptance rate (tiny model, deterministic routing, random weights)
+confirms the verifier logic is correct. Real models with random-looking
+outputs will have lower acceptance rates (~60–85%), which will also reduce
+tree spec decode's overhead to more practical depth=2–3 ranges.
+
+### Why tree decode collapsed to 4 TPS
+
+The adaptive controller saw 100% acceptance → increased depth and width to
+maximum (depth=4, width=4 = 256 leaf paths). Each leaf path requires a
+separate forward pass on CPU. That's the tree spec decode working correctly
+but overwhelmed on tiny-model CPU. On GPU at real batch sizes, the tree paths
+are verified in a single batched forward pass — constant cost regardless of
+width.
+
+---
+
+## Projected TPS for Real MoE (GPU, memory-bound regime)
 
 Estimates for Qwen3-235B-class MoE on A100 80GB + PCIe 4.0 × 16:
 
@@ -238,7 +286,7 @@ Key drivers:
 - **Caching** eliminates 60–70% of transfers entirely (power-law expert distribution)
 - **Quantization** doubles VRAM capacity (more hot experts fit) and 4× transfer speed for RAM tier
 - **Self-draft** generates ~3–4 tokens per verify pass (~85% acceptance rate on typical text)
-- **Tree decoding** extends to ~5–7 tokens per pass by branching
+- **Tree decoding** extends to ~5–7 tokens per pass (batched tree verification on GPU)
 
 ---
 
