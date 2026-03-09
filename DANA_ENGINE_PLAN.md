@@ -691,6 +691,150 @@ dana/
 
 ---
 
+## Platform ↔ Engine Integration Architecture
+
+The platform (SaaS layer) and the engine (inference layer) are decoupled via an **adapter contract**. Switching engines is a single environment variable change. No platform code changes required.
+
+### The Full Stack
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   CLIENT                            │
+│         (API consumers, dashboard, playground)      │
+└───────────────────────┬─────────────────────────────┘
+                        │ HTTPS
+┌───────────────────────▼─────────────────────────────┐
+│            platform/services/api-gateway            │
+│   Rate limiting · Auth middleware · SSE streaming   │
+└───────────────────────┬─────────────────────────────┘
+                        │ internal HTTP
+┌───────────────────────▼─────────────────────────────┐
+│         platform/services/inference-gateway         │
+│                                                     │
+│  ENGINE=dana   →  DanaEngineAdapter  ─────────┐    │
+│  ENGINE=sglang →  SGLangAdapter      ──────┐  │    │
+│  ENGINE=mock   →  MockEngineAdapter  ────┐ │  │    │
+│                                          │ │  │    │
+│  All implement InferenceEngine ABC       │ │  │    │
+│  (platform/packages/inference-interface) │ │  │    │
+└──────────────────────────────────────────┼─┼──┼────┘
+                                           │ │  │
+              ┌────────────────────────────┘ │  │
+              │        ┌─────────────────────┘  │
+              │        │           ┌────────────┘
+┌─────────────▼──┐  ┌──▼──────────────┐  ┌──────────┐
+│  dana-engine   │  │  sglang-worker   │  │   mock   │
+│  (port 8001)   │  │  (port 8002)     │  │  (tests) │
+│                │  │                  │  │          │
+│  Custom MoE    │  │  SGLang /        │  │  Fake    │
+│  engine with   │  │  KTransformers   │  │  responses│
+│  all 6 pillars │  │  (old engine)    │  │          │
+└────────────────┘  └──────────────────┘  └──────────┘
+```
+
+### The Contract: `inference-interface`
+
+Lives at `platform/packages/inference-interface/`. Every engine adapter implements this Python ABC:
+
+```python
+class InferenceEngine(ABC):
+    @property
+    def name(self) -> str: ...              # "dana-engine" | "sglang" | "mock"
+
+    @property
+    def capabilities(self) -> EngineCapabilities: ...  # what this engine supports
+
+    async def complete(self, request) -> CompletionResponse: ...
+    async def stream(self, request) -> AsyncIterator[StreamChunk]: ...
+    async def health(self) -> EngineHealth: ...
+    async def list_models(self) -> list[ModelInfo]: ...
+    async def startup(self) -> None: ...    # called once at gateway boot
+    async def shutdown(self) -> None: ...   # called once at gateway stop
+```
+
+`EngineCapabilities` declares what each engine supports so the gateway can reject unsupported requests early rather than letting them fail downstream:
+
+| Capability | `dana-engine` | `sglang` | `mock` |
+|---|---|---|---|
+| `streaming` | ✓ | ✓ | ✓ |
+| `batching` | ✓ | ✗ | ✓ |
+| `speculative_decoding` | ✓ | ✗ | ✗ |
+| `expert_aware_batching` | ✓ | ✗ | ✗ |
+| `max_concurrent_requests` | 50 | 4 | 100 |
+| `supported_quantizations` | fp16/q8/q4/q2 | fp16/q4 | fp16 |
+
+### Switching Engines
+
+```bash
+# Use the new custom MoE engine (default — production)
+ENGINE=dana docker-compose up
+
+# Fall back to old SGLang engine
+ENGINE=sglang docker-compose up
+
+# CI / local dev without a GPU
+ENGINE=mock docker-compose up
+```
+
+That's the entire switching mechanism. One env var. The rest of the platform (api-gateway, auth, billing, analytics, web) is completely untouched.
+
+### Platform Services: Active vs Deprecated
+
+| Service | Status | Role |
+|---|---|---|
+| `api-gateway` | **Active** | External-facing, auth, rate limiting |
+| `auth-service` | **Active** | JWT, API keys, users |
+| `billing-service` | **Active** | Metering, quotas, payment |
+| `analytics-service` | **Active** | Usage tracking, cost analysis |
+| `model-registry` | **Active** | Model catalog, health checks |
+| `finetuning-service` | **Active** | LoRA training (orthogonal to engine) |
+| `web/` | **Active** | Dashboard, landing, docs |
+| `inference-gateway` | **Active (new)** | Engine adapter + request routing |
+| `sglang-worker` | **Active (renamed)** | Was `inference-worker` — SGLang/KTransformers |
+| `inference-router` | **Deprecated** | Absorbed into `inference-gateway` |
+
+### New Folder Additions to `platform/`
+
+```
+platform/
+├── packages/
+│   └── inference-interface/          # NEW: the engine contract
+│       ├── pyproject.toml
+│       └── src/inference_interface/
+│           ├── __init__.py
+│           ├── protocol.py           # InferenceEngine ABC + EngineCapabilities
+│           ├── types.py              # CompletionRequest/Response, StreamChunk, etc.
+│           └── registry.py           # Maps ENGINE name → adapter class
+│
+└── services/
+    ├── inference-gateway/            # NEW: replaces inference-router
+    │   ├── pyproject.toml
+    │   └── src/inference_gateway/
+    │       ├── main.py               # FastAPI app, reads ENGINE env var at startup
+    │       └── adapters/
+    │           ├── dana_engine.py    # Calls engine/dana-engine HTTP API
+    │           ├── sglang.py         # Calls platform/sglang-worker HTTP API
+    │           └── mock.py           # Fake responses for CI/testing
+    │
+    ├── sglang-worker/                # RENAMED from inference-worker
+    │   └── (SGLang/KTransformers wrapping — unchanged)
+    │
+    └── inference-router/             # DEPRECATED
+        ├── DEPRECATED.md             # Explains why, migration path
+        └── (kept for reference — queue/load-balancer logic)
+```
+
+### Adding a Future Engine
+
+1. Add `platform/services/inference-gateway/src/inference_gateway/adapters/new_engine.py`
+2. Implement the 5 abstract methods of `InferenceEngine`
+3. Register in `inference-interface/src/inference_interface/registry.py`
+4. Run with `ENGINE=new_engine`
+
+No changes to api-gateway, auth, billing, or any other platform service.
+
+---
+
 ## Implementation Phases (Revised for Unbundled Architecture)
 
 Each phase now produces a **shippable, independently testable product**.
