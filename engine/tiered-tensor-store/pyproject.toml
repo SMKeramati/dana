@@ -1,0 +1,28 @@
+[project]
+name = "tiered-tensor-store"
+version = "0.1.0"
+description = "Three-tier tensor storage (VRAM/RAM/SSD) for large model inference on constrained hardware"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.0",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
