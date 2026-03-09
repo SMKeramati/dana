@@ -158,6 +158,36 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  engine-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install engine packages (CPU-only torch for CI speed)
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install numpy pytest pytest-asyncio fastapi uvicorn httpx
+          pip install -e tiered-tensor-store[test]
+          pip install -e expert-cache[test]
+          pip install -e moe-quant[test]
+          pip install -e moe-router-predict[test]
+          pip install -e spec-decode-tree[test]
+          pip install -e moe-self-draft[test]
+          pip install -e dana-engine[test] --no-deps
+      - name: Test all engine packages
+        run: |
+          for pkg in tiered-tensor-store expert-cache moe-quant moe-router-predict spec-decode-tree moe-self-draft dana-engine; do
+            if [ -d "$pkg/tests" ]; then
+              echo "=== Testing $pkg ==="
+              (cd "$pkg" && python -m pytest tests/ -v --tb=short)
+            fi
+          done
+
   security:
     runs-on: ubuntu-latest
     steps:

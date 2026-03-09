@@ -1,0 +1,25 @@
+[project]
+name = "moe-self-draft"
+version = "0.1.0"
+description = "Zero-memory speculative decoding for MoE: same model drafts with top-1 expert instead of a separate draft model"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
