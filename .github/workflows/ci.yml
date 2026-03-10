@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install ruff
-      - run: ruff check packages/ services/
+      - run: ruff check platform/packages/ platform/services/
 
   typecheck:
     runs-on: ubuntu-latest
@@ -27,10 +27,10 @@ jobs:
       - run: pip install mypy pydantic fastapi sqlalchemy redis cryptography aio-pika httpx python-dotenv
       - name: Typecheck packages and services
         env:
-          MYPYPATH: packages/dana-common/src
+          MYPYPATH: platform/packages/dana-common/src
         run: |
-          mypy packages/dana-common/src --ignore-missing-imports
-          for svc in services/*/; do
+          mypy platform/packages/dana-common/src --ignore-missing-imports
+          for svc in platform/services/*/; do
             if [ -d "$svc/src" ]; then
               echo "Typechecking $(basename $svc)..."
               mypy "$svc/src" --ignore-missing-imports
@@ -70,19 +70,22 @@ jobs:
       - name: Install dependencies
         run: |
           # Services with heavy ML deps (torch, etc.) are tested separately
-          SKIP_SERVICES="finetuning-service"
-          pip install -e packages/dana-common[test]
-          pip install -e packages/dana-sdk[test] 2>/dev/null || true
-          for svc in services/*/; do
+          SKIP_SERVICES="finetuning-service sglang-worker"
+          pip install -e platform/packages/dana-common[test]
+          pip install -e platform/packages/dana-sdk[test] 2>/dev/null || true
+          for svc in platform/services/*/; do
             svc_name=$(basename "$svc")
             if echo "$SKIP_SERVICES" | grep -qw "$svc_name"; then
               echo "Skipping $svc_name (heavy ML deps)"
               continue
             fi
             if [ -f "$svc/pyproject.toml" ]; then
-              pip install -e "$svc[test]"
+              pip install -e "$svc" --no-deps
+              pip install -e "$svc[test]" --no-deps 2>/dev/null || true
             fi
           done
+          # Install remaining service runtime deps (except dana-common which is local)
+          pip install sqlalchemy asyncpg passlib[bcrypt] bcrypt aio-pika redis aiopg 2>/dev/null || true
       - name: Run tests
         env:
           POSTGRES_HOST: localhost
@@ -99,9 +102,9 @@ jobs:
           ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef"
           ENVIRONMENT: test
         run: |
-          SKIP_SERVICES="finetuning-service"
-          python -m pytest packages/ -v --tb=short
-          for svc in services/*/; do
+          SKIP_SERVICES="finetuning-service sglang-worker"
+          python -m pytest platform/packages/ -v --tb=short
+          for svc in platform/services/*/; do
             svc_name=$(basename "$svc")
             if echo "$SKIP_SERVICES" | grep -qw "$svc_name"; then
               continue
@@ -118,7 +121,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Docker images
         run: |
-          for svc in services/*/; do
+          for svc in platform/services/*/; do
             svc_name=$(basename "$svc")
             dockerfile="$svc/Dockerfile"
             if [ -f "$dockerfile" ]; then
@@ -131,14 +134,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web/landing
+        working-directory: platform/web/landing
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: web/landing/package-lock.json
+          cache-dependency-path: platform/web/landing/package-lock.json
       - run: npm ci
       - run: npx eslint .
       - run: npx tsc --noEmit
@@ -147,14 +150,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: web/landing
+        working-directory: platform/web/landing
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: web/landing/package-lock.json
+          cache-dependency-path: platform/web/landing/package-lock.json
       - run: npm ci
       - run: npm run build
 
@@ -196,4 +199,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install bandit
-      - run: bandit -r packages/dana-common/src services/*/src -ll --skip B101,B104,B108,B310,B615
+      - run: bandit -r platform/packages/dana-common/src platform/services/*/src -ll --skip B101,B104,B108,B310,B615

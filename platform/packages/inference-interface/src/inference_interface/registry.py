@@ -22,7 +22,7 @@ _ADAPTERS: dict[str, tuple[str, str]] = {
 
 
 class EngineRegistry:
-    def load(self, engine_name: str) -> "InferenceEngine":
+    def load(self, engine_name: str) -> InferenceEngine:
         key = engine_name.lower()
         if key not in _ADAPTERS:
             available = list(_ADAPTERS.keys())
