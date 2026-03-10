@@ -13,7 +13,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from typing import Optional, Callable
+from typing import Any, Optional, Callable
 
 from moe_router_predict.residency import ExpertResidencyTracker
 
@@ -46,15 +46,39 @@ class AsyncExpertLoader:
         tracker: ExpertResidencyTracker,
         load_fn: Optional[Callable] = None,
         max_concurrent: int = 2,
+        cuda_stream: Optional[Any] = None,
     ) -> None:
         self.tracker = tracker
         self.load_fn = load_fn or self._noop_load
         self.max_concurrent = max_concurrent
+        self._cuda_stream = cuda_stream  # torch.cuda.Stream for non-blocking H2D
         self._queue: asyncio.PriorityQueue = asyncio.PriorityQueue()
         self._workers: list[asyncio.Task] = []
         self._running = False
         self.loads_completed: int = 0
         self.loads_enqueued: int = 0
+
+    @classmethod
+    def create_with_cuda_stream(
+        cls,
+        tracker: ExpertResidencyTracker,
+        load_fn: Optional[Callable] = None,
+        max_concurrent: int = 2,
+    ) -> "AsyncExpertLoader":
+        """Create loader with a dedicated CUDA stream for non-blocking H2D transfers.
+
+        Each expert load runs inside ``torch.cuda.stream(stream)`` so H2D
+        copies overlap with GPU compute on the default stream. Falls back to
+        CPU mode (no stream) when CUDA is not available.
+        """
+        try:
+            import torch
+            if torch.cuda.is_available():
+                stream = torch.cuda.Stream()
+                return cls(tracker, load_fn, max_concurrent, cuda_stream=stream)
+        except ImportError:
+            pass
+        return cls(tracker, load_fn, max_concurrent)
 
     async def start(self) -> None:
         """Start background worker tasks."""
@@ -112,6 +136,18 @@ class AsyncExpertLoader:
             try:
                 if asyncio.iscoroutinefunction(self.load_fn):
                     await self.load_fn(req.expert_id, req.target_tier)
+                elif self._cuda_stream is not None:
+                    # GPU: run load_fn inside a dedicated CUDA stream so the
+                    # H2D transfer overlaps with compute on the default stream
+                    # (non-blocking double-buffer behaviour).
+                    import torch
+                    cuda_stream = self._cuda_stream
+
+                    def _load_in_stream() -> None:
+                        with torch.cuda.stream(cuda_stream):
+                            self.load_fn(req.expert_id, req.target_tier)
+
+                    await asyncio.get_event_loop().run_in_executor(None, _load_in_stream)
                 else:
                     await asyncio.get_event_loop().run_in_executor(
                         None, self.load_fn, req.expert_id, req.target_tier

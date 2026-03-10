@@ -49,33 +49,44 @@ class TreeVerifier:
         if not draft_tree.paths or all(len(p) == 0 for p in draft_tree.paths):
             return self._fallback_sample(draft_tree.input_ids)
 
-        best_path: list[int] = []
-        best_length = -1
+        valid_paths = [(i, p) for i, p in enumerate(draft_tree.paths) if p]
+        if not valid_paths:
+            return self._fallback_sample(draft_tree.input_ids)
 
+        context = draft_tree.input_ids          # (1, prompt_len)
+        prompt_len = context.shape[1]
+        device = context.device
+        max_path_len = max(len(p) for _, p in valid_paths)
+        batch_size = len(valid_paths)
+
+        # Build padded batch — all paths share the same prompt prefix.
+        # Padding positions beyond each path's true length are never read
+        # (acceptance check only looks at positions [prompt_len, prompt_len+len(path))).
+        prompt_part = context.expand(batch_size, -1)                        # (B, prompt_len)
+        path_part = torch.zeros(batch_size, max_path_len, dtype=torch.long, device=device)
+        for bi, (_, path) in enumerate(valid_paths):
+            draft_ids = torch.tensor(path, dtype=torch.long, device=device)
+            path_part[bi, :len(path)] = draft_ids
+        padded = torch.cat([prompt_part, path_part], dim=1)                 # (B, total_len)
+
+        # Single batched forward — O(1) target model calls regardless of tree size.
+        # Speedup vs. per-path loop: linear in batch_size (≈ width^depth paths).
         self.target_model.eval()
         with torch.no_grad():
-            for path in draft_tree.paths:
-                if not path:
-                    continue
+            out = self.target_model(padded)                                  # (B, total_len, vocab)
+        all_logits = out.logits
 
-                # Build context with draft tokens
-                draft_ids = torch.tensor(path, dtype=torch.long).unsqueeze(0)
-                context = torch.cat([draft_tree.input_ids, draft_ids], dim=1)
-
-                # Run target model on full context
-                out = self.target_model(context)
-                target_logits = out.logits  # (1, T+len(path), vocab)
-
-                # Check acceptance for each draft token
-                accepted = self._accept_path(
-                    path=path,
-                    target_logits=target_logits,
-                    prompt_len=draft_tree.input_ids.shape[1],
-                )
-
-                if len(accepted) > best_length:
-                    best_length = len(accepted)
-                    best_path = accepted
+        best_path: list[int] = []
+        best_length = -1
+        for bi, (_, path) in enumerate(valid_paths):
+            accepted = self._accept_path(
+                path=path,
+                target_logits=all_logits[bi:bi+1],                          # (1, total_len, vocab)
+                prompt_len=prompt_len,
+            )
+            if len(accepted) > best_length:
+                best_length = len(accepted)
+                best_path = accepted
 
         if not best_path:
             return self._fallback_sample(draft_tree.input_ids)

@@ -31,16 +31,32 @@ from dana_engine.pipeline import DanaInferencePipeline, PipelineConfig
 
 # Global pipeline instance — created on startup
 _pipeline: DanaInferencePipeline | None = None
+_tokenizer = None   # real AutoTokenizer when tokenizer_name_or_path is set
 _active_requests: int = 0
+
+
+def _load_tokenizer(pipeline: DanaInferencePipeline):
+    """Load AutoTokenizer from pipeline config; fall back to None (synthetic)."""
+    path = pipeline.config.tokenizer_name_or_path
+    if not path:
+        return None
+    try:
+        from transformers import AutoTokenizer  # type: ignore[import]
+        tok = AutoTokenizer.from_pretrained(path)
+        return tok
+    except Exception:
+        return None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup/shutdown lifecycle."""
-    global _pipeline
+    global _pipeline, _tokenizer
     _pipeline = DanaInferencePipeline(PipelineConfig())
+    _tokenizer = _load_tokenizer(_pipeline)
     yield
     _pipeline = None
+    _tokenizer = None
 
 
 app = FastAPI(title="Dana Engine", version="0.1.0", lifespan=lifespan)
@@ -52,18 +68,25 @@ def get_pipeline() -> DanaInferencePipeline:
     return _pipeline
 
 
-def _tokenize(prompt: str, vocab_size: int) -> torch.Tensor:
-    """Synthetic tokenizer: convert string chars to token IDs mod vocab_size.
-    In production: replace with real BPE tokenizer.
+def _tokenize(prompt: str, vocab_size: int, tokenizer=None) -> torch.Tensor:
+    """Tokenize a prompt using AutoTokenizer when available, else synthetic fallback.
+
+    Synthetic fallback: ord(char) % vocab_size — readable for debugging but
+    produces garbage text output. Set PipelineConfig.tokenizer_name_or_path to
+    enable real BPE tokenization.
     """
-    ids = [ord(c) % vocab_size for c in prompt] if prompt else [0]
+    if tokenizer is not None:
+        ids = tokenizer.encode(prompt, add_special_tokens=False)
+        ids = [i % vocab_size for i in ids] if ids else [0]
+    else:
+        ids = [ord(c) % vocab_size for c in prompt] if prompt else [0]
     return torch.tensor(ids, dtype=torch.long).unsqueeze(0)
 
 
-def _detokenize(token_ids: list[int]) -> str:
-    """Synthetic detokenizer: convert token IDs back to a string.
-    In production: replace with real BPE decoder.
-    """
+def _detokenize(token_ids: list[int], tokenizer=None) -> str:
+    """Detokenize using AutoTokenizer when available, else synthetic fallback."""
+    if tokenizer is not None:
+        return tokenizer.decode(token_ids, skip_special_tokens=True)
     return " ".join(str(t) for t in token_ids)
 
 
@@ -81,7 +104,7 @@ async def completions(request: Request):
 
         pipeline = get_pipeline()
         vocab_size = pipeline.config.model_config.vocab_size
-        input_ids = _tokenize(prompt, vocab_size)
+        input_ids = _tokenize(prompt, vocab_size, _tokenizer)
 
         if stream:
             return StreamingResponse(
@@ -93,7 +116,7 @@ async def completions(request: Request):
             result = await pipeline.generate_async(input_ids, max_new_tokens=max_tokens)
             latency_ms = (time.perf_counter() - t0) * 1000
 
-            text = _detokenize(result.tokens)
+            text = _detokenize(result.tokens, _tokenizer)
             return {
                 "model": model_id,
                 "choices": [{"text": text, "finish_reason": result.finish_reason}],

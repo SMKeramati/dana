@@ -5,21 +5,22 @@ Orchestration order per forward step:
   2. MoeSelfDrafter runs in top-1 mode (draft)
   3. SelfDraftVerifier runs in top-2 mode (verify)
   4. Accepted tokens returned
-
-CPU mode throughout (feature-flagged CUDA paths marked TODO).
 """
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 import torch
 
 from dana_engine.model.config import TinyMoEConfig
 from dana_engine.model.transformer import TinyMoETransformer
 from dana_engine.naive_inference import greedy_generate, NaiveGenerationResult
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,6 +35,8 @@ class PipelineConfig:
     prefetch_steps: int = 2
     max_new_tokens: int = 64
     temperature: float = 1.0
+    tokenizer_name_or_path: Optional[str] = None  # set to use real AutoTokenizer
+    vram_budget_bytes: Optional[int] = None        # None → auto-detect from GPU
 
 
 @dataclass
@@ -67,6 +70,9 @@ class DanaInferencePipeline:
         self._drafter = None
         self._verifier = None
         self._predictor = None
+        self._residency_tracker = None
+        self._expert_cache = None
+        self._budget_manager = None
 
         if self.config.enable_spec_decode:
             self._init_spec_decode()
@@ -173,6 +179,9 @@ class DanaInferencePipeline:
             remaining = max_new_tokens - len(all_tokens)
             num_draft = min(self.config.num_draft_tokens, remaining)
 
+            # Enforce VRAM budget before each step (evicts cold experts if needed)
+            self._enforce_vram_budget()
+
             # Optionally prefetch experts predicted by draft router logits
             draft_result = drafter.draft(current_ids, num_draft_tokens=num_draft)
 
@@ -246,15 +255,98 @@ class DanaInferencePipeline:
     def _init_prefetch(self) -> None:
         try:
             from moe_router_predict.predictor import RouterPredictor
-            self._predictor = RouterPredictor(self._model, num_steps=self.config.prefetch_steps)
-        except Exception:
-            self._predictor = None  # graceful degradation
+            from moe_router_predict.residency import ExpertResidencyTracker
+            from expert_cache.lru_cache import LRUExpertCache
+            from expert_cache.budget_manager import VRAMBudgetManager
+
+            # RouterPredictor constructor takes only the model; num_steps is a
+            # per-call argument on predict(), not a constructor parameter.
+            self._predictor = RouterPredictor(self._model)
+            num_experts = self._model.config.num_experts
+            self._residency_tracker = ExpertResidencyTracker(num_experts=num_experts)
+            self._expert_cache = LRUExpertCache(capacity=num_experts)
+
+            # VRAM budget: explicit config > GPU capacity×80% > 4 GB fallback
+            if self.config.vram_budget_bytes is not None:
+                budget = self.config.vram_budget_bytes
+            elif torch.cuda.is_available():
+                vram_total = torch.cuda.get_device_properties(0).total_memory
+                budget = int(vram_total * 0.80)
+            else:
+                budget = 4 * 1024 ** 3  # 4 GB (unused on CPU, just a sane default)
+
+            self._budget_manager = VRAMBudgetManager(budget_bytes=budget)
+            logger.debug(
+                "Prefetch init: %d experts, budget %.1f GB",
+                num_experts, budget / 1024 ** 3,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Prefetch init skipped: %s", exc)
+            self._predictor = None
+            self._residency_tracker = None
+            self._expert_cache = None
+            self._budget_manager = None
 
     def _prefetch_from_draft(self, draft_result: object) -> None:
         """Use predicted experts from draft router logits as prefetch hints.
 
-        In CPU mode this is a no-op beyond bookkeeping; in GPU mode these
-        hints would fire async H2D transfers via AsyncExpertLoader.
+        Extracts the set of experts predicted during drafting and marks them
+        as hot in the residency tracker. On GPU, this is where async H2D
+        transfers via AsyncExpertLoader would be enqueued (via
+        ``AsyncExpertLoader.create_with_cuda_stream()``).
         """
-        # TODO(gpu): wire to AsyncExpertLoader.enqueue() with priority scheduling
-        pass
+        if self._residency_tracker is None:
+            return
+
+        try:
+            predicted: set[int] = draft_result.predicted_experts()  # type: ignore[attr-defined]
+        except AttributeError:
+            return
+
+        if not predicted:
+            return
+
+        for expert_id in predicted:
+            if self._residency_tracker.needs_load(expert_id):
+                # GPU path: enqueue non-blocking H2D via AsyncExpertLoader
+                # (requires AsyncExpertLoader.create_with_cuda_stream() started
+                # in a background thread; see QwenMoEAdapter integration).
+                # CPU path: mark hot directly — no tensor to move, bookkeeping only.
+                self._residency_tracker.mark(expert_id, "hot")
+                if self._expert_cache is not None:
+                    # Track as cached so budget manager can evict LRU if needed
+                    dummy = torch.empty(0)  # placeholder; real weight lives in store
+                    self._expert_cache.put(expert_id, dummy)
+                    if self._budget_manager is not None:
+                        self._budget_manager.register(dummy)
+
+    def _enforce_vram_budget(self) -> None:
+        """Evict cold experts from the LRU cache if VRAM usage exceeds budget.
+
+        On GPU, compares actual ``torch.cuda.memory_allocated()`` against the
+        configured budget and calls ``VRAMBudgetManager.enforce()`` to evict
+        the least-recently-used experts, updating the residency tracker.
+        On CPU this is a no-op (no VRAM to manage).
+        """
+        if self._budget_manager is None or self._expert_cache is None:
+            return
+        if not torch.cuda.is_available():
+            return
+
+        vram_used = torch.cuda.memory_allocated()
+        if vram_used <= self._budget_manager.budget:
+            return
+
+        evicted_count = self._budget_manager.enforce(self._expert_cache)
+        if evicted_count > 0 and self._residency_tracker is not None:
+            # Sync residency tracker: evicted experts are no longer hot
+            hot = set(self._residency_tracker.hot_experts())
+            cached = set(self._expert_cache.cached_ids())
+            for eid in hot - cached:
+                self._residency_tracker.mark(eid, "ssd")
+            logger.debug(
+                "VRAM budget enforced: evicted %d experts (VRAM used %.1f GB / budget %.1f GB)",
+                evicted_count,
+                vram_used / 1024 ** 3,
+                self._budget_manager.budget / 1024 ** 3,
+            )
