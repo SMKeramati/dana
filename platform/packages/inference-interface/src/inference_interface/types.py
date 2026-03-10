@@ -6,7 +6,6 @@ can be wrapped by an adapter with minimal translation work.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -19,7 +18,7 @@ class CompletionRequest:
     stream: bool = False
     stop: list[str] = field(default_factory=list)
     # Dana-engine-specific hints (ignored by sglang adapter)
-    preferred_engine: Optional[str] = None  # force a specific engine
+    preferred_engine: str | None = None  # force a specific engine
 
 
 @dataclass

@@ -12,18 +12,17 @@ Dana-specific capabilities:
 from __future__ import annotations
 
 import os
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 import httpx
-
 from inference_interface import (
-    InferenceEngine,
-    EngineCapabilities,
     CompletionRequest,
     CompletionResponse,
-    StreamChunk,
+    EngineCapabilities,
     EngineHealth,
+    InferenceEngine,
     ModelInfo,
+    StreamChunk,
 )
 
 

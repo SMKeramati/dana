@@ -5,16 +5,16 @@ Use in CI, unit tests, and local development without GPU.
 """
 from __future__ import annotations
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from inference_interface import (
-    InferenceEngine,
-    EngineCapabilities,
     CompletionRequest,
     CompletionResponse,
-    StreamChunk,
+    EngineCapabilities,
     EngineHealth,
+    InferenceEngine,
     ModelInfo,
+    StreamChunk,
 )
 
 _FAKE_RESPONSE = "This is a mock response for testing purposes."

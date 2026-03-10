@@ -8,10 +8,10 @@ Switching engines = changing one environment variable.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import AsyncIterator
 
-from .types import CompletionRequest, CompletionResponse, StreamChunk, EngineHealth, ModelInfo
+from .types import CompletionRequest, CompletionResponse, EngineHealth, ModelInfo, StreamChunk
 
 
 @dataclass

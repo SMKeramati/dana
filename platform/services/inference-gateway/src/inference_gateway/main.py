@@ -8,14 +8,13 @@ Switching engines:
 A/B testing (future):
     ENGINE=dana:90,sglang:10  → 90% dana, 10% sglang
 """
-import os
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-
-from inference_interface import EngineRegistry, CompletionRequest
+from inference_interface import CompletionRequest, EngineRegistry
 
 logger = logging.getLogger(__name__)
 

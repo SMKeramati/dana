@@ -1,12 +1,12 @@
-from .protocol import InferenceEngine, EngineCapabilities
+from .protocol import EngineCapabilities, InferenceEngine
+from .registry import EngineRegistry
 from .types import (
     CompletionRequest,
     CompletionResponse,
-    StreamChunk,
     EngineHealth,
     ModelInfo,
+    StreamChunk,
 )
-from .registry import EngineRegistry
 
 __all__ = [
     "InferenceEngine",
