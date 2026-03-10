@@ -125,6 +125,7 @@ class TieredTensorStore:
             tensor = self._read_from_tier(entry)
             if self.auto_promote:
                 self._make_hot(key, tensor, entry)
+                return entry.tensor  # type: ignore[return-value]  # _make_hot guarantees not None
             return tensor
 
     def evict(self, key: str, to_tier: str = "ssd") -> None:
