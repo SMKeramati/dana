@@ -54,6 +54,7 @@ class DanaEngineAdapter(InferenceEngine):
             await self._client.aclose()
 
     async def complete(self, request: CompletionRequest) -> CompletionResponse:
+        assert self._client is not None, "DanaEngineAdapter.startup() was not called"
         payload = {
             "model": request.model,
             "prompt": request.prompt,
@@ -76,6 +77,7 @@ class DanaEngineAdapter(InferenceEngine):
         )
 
     async def stream(self, request: CompletionRequest) -> AsyncIterator[StreamChunk]:
+        assert self._client is not None, "DanaEngineAdapter.startup() was not called"
         payload = {
             "model": request.model,
             "prompt": request.prompt,
@@ -98,6 +100,7 @@ class DanaEngineAdapter(InferenceEngine):
                     yield StreamChunk(delta=delta, done=False, engine=self.name)
 
     async def health(self) -> EngineHealth:
+        assert self._client is not None, "DanaEngineAdapter.startup() was not called"
         try:
             resp = await self._client.get("/health", timeout=5.0)
             data = resp.json()
@@ -112,6 +115,7 @@ class DanaEngineAdapter(InferenceEngine):
                                 active_requests=0, message=str(e))
 
     async def list_models(self) -> list[ModelInfo]:
+        assert self._client is not None, "DanaEngineAdapter.startup() was not called"
         resp = await self._client.get("/v1/models")
         resp.raise_for_status()
         return [

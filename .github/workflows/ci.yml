@@ -85,7 +85,7 @@ jobs:
             fi
           done
           # Install remaining service runtime deps (except dana-common which is local)
-          pip install sqlalchemy asyncpg passlib[bcrypt] bcrypt aio-pika redis aiopg 2>/dev/null || true
+          pip install sqlalchemy asyncpg passlib[bcrypt] bcrypt aio-pika redis aiopg numpy scipy 2>/dev/null || true
       - name: Run tests
         env:
           POSTGRES_HOST: localhost
@@ -126,7 +126,7 @@ jobs:
             dockerfile="$svc/Dockerfile"
             if [ -f "$dockerfile" ]; then
               echo "Building $svc_name..."
-              docker build -f "$dockerfile" -t "dana-$svc_name:test" .
+              docker build -f "$dockerfile" -t "dana-$svc_name:test" platform/
             fi
           done
 
