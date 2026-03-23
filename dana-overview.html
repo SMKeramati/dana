@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دانا — موتور استنتاج هوش مصنوعی ایرانی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --paper: #f5f0e8;
+    --gold: #c9a84c;
+    --gold-light: #e8d5a3;
+    --gold-dark: #8a6a1f;
+    --rust: #b84c2a;
+    --teal: #1a5c5c;
+    --teal-light: #2d8a8a;
+    --cream: #faf7f0;
+    --border: #d4c9b0;
+    --text-muted: #6b5f47;
+    --shadow: rgba(13,13,13,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Vazirmatn', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1.8;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE TEXTURE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ─── HEADER / HERO ─── */
+  .hero {
+    min-height: 100vh;
+    background: var(--ink);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridPulse 8s ease-in-out infinite;
+  }
+
+  @keyframes gridPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: glowBreath 6s ease-in-out infinite;
+  }
+
+  @keyframes glowBreath {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  }
+
+  .hero-content { position: relative; z-index: 2; text-align: center; max-width: 900px; }
+
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 3rem;
+    animation: fadeDown 1s ease both;
+  }
+
+  .brand-icon {
+    width: 64px;
+    height: 64px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .brand-icon::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 50%;
+  }
+
+  .brand-icon svg { width: 28px; height: 28px; fill: var(--gold); }
+
+  .brand-name {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--gold-light);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .hero-title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    color: var(--cream);
+    line-height: 1.1;
+    margin-bottom: 1rem;
+    animation: fadeDown 1s 0.2s ease both;
+  }
+
+  .hero-title span {
+    color: var(--gold);
+    display: block;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    font-weight: 300;
+    color: rgba(245,240,232,0.6);
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    animation: fadeDown 1s 0.4s ease both;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fadeDown 1s 0.6s ease both;
+    padding-bottom: 5rem;
+  }
+
+  .badge {
+    padding: 0.5rem 1.2rem;
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--gold-light);
+    background: rgba(201,168,76,0.05);
+    backdrop-filter: blur(10px);
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(245,240,232,0.3);
+    font-size: 0.75rem;
+    animation: fadeIn 2s 1s ease both;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .scroll-arrow {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(201,168,76,0.6), transparent);
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollBounce {
+    0%, 100% { transform: scaleY(1); opacity: 0.6; }
+    50% { transform: scaleY(1.4); opacity: 1; }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* ─── SECTION STRUCTURE ─── */
+  .section {
+    padding: 6rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    max-width: 60px;
+    height: 1px;
+    background: var(--gold-dark);
+  }
+
+  .section-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--ink);
+  }
+
+  .section-body {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    max-width: 700px;
+    line-height: 1.9;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 0;
+  }
+
+  /* ─── WOW MOMENTS ─── */
+  .wow-section {
+    background: var(--ink);
+    padding: 5rem 2rem;
+    border-top: 1px solid rgba(201,168,76,0.1);
+  }
+  .wow-inner { max-width: 1100px; margin: 0 auto; }
+
+  .wow-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    color: rgba(201,168,76,0.5);
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .wow-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .wow-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 2px;
+    padding: 1.75rem;
+    position: relative;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .wow-card:hover {
+    background: rgba(201,168,76,0.05);
+    border-color: rgba(201,168,76,0.25);
+  }
+
+  .wow-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .wow-avatar svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gold);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .wow-quote {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: rgba(245,240,232,0.75);
+    margin-bottom: 1.25rem;
+  }
+
+  .wow-quote strong {
+    color: var(--gold-light);
+    font-weight: 700;
+  }
+
+  .wow-quote .model-tag {
+    display: inline-block;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--teal-light);
+    background: rgba(45,138,138,0.12);
+    padding: 0.1rem 0.45rem;
+    border-radius: 3px;
+  }
+
+  .wow-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.75rem;
+    color: rgba(245,240,232,0.25);
+  }
+
+  .wow-meta-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .wow-highlight {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.3rem;
+    line-height: 1.2;
+  }
+
+  @media (max-width: 768px) {
+    .wow-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── PROBLEM / VISION SECTION ─── */
+  .vision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 3rem;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  .vision-card {
+    padding: 2.5rem;
+    background: var(--cream);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease;
+  }
+
+  .vision-card:hover { background: white; }
+
+  .vision-card:first-child { border-left: 4px solid var(--rust); }
+  .vision-card:last-child { border-left: 4px solid var(--teal); }
+
+  .vision-card-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .vision-card:first-child .vision-card-label { color: var(--rust); }
+  .vision-card:last-child .vision-card-label { color: var(--teal); }
+
+  .vision-card h3 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  .vision-card p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; }
+
+  /* ─── STAT STRIP ─── */
+  .stat-strip {
+    background: var(--ink);
+    padding: 4rem 2rem;
+    overflow: hidden;
+  }
+
+  .stat-strip-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+  }
+
+  .stat-item {
+    padding: 2rem;
+    text-align: center;
+    border-right: 1px solid rgba(201,168,76,0.15);
+    position: relative;
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-number {
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: rgba(245,240,232,0.5);
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── PILLARS (LADDER) ─── */
+  .pillars-section { background: var(--cream); padding: 6rem 2rem; }
+  .pillars-inner { max-width: 1100px; margin: 0 auto; }
+  .pillars-header { margin-bottom: 4rem; }
+
+  /* ladder layout */
+  .ladder {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* the vertical spine on the right */
+  .ladder::before {
+    content: '';
+    position: absolute;
+    right: 28px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold) 0%, rgba(201,168,76,0.1) 85%, transparent 100%);
+    z-index: 0;
+  }
+
+  .ladder-rung {
+    display: grid;
+    grid-template-columns: 1fr 56px;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* horizontal rung line */
+  .ladder-rung::after {
+    content: '';
+    position: absolute;
+    right: 28px;
+    top: 50%;
+    width: 28px;
+    height: 2px;
+    background: var(--gold);
+    z-index: 0;
+  }
+
+  .ladder-rung:last-child::after { display: none; }
+
+  .ladder-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-right: 4px solid var(--border);
+    padding: 1.75rem 2rem;
+    margin-bottom: 12px;
+    position: relative;
+    transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  }
+
+  .ladder-card:hover {
+    border-right-color: var(--gold);
+    box-shadow: 4px 0 0 0 var(--gold), 0 8px 32px rgba(13,13,13,0.08);
+    transform: translateX(-4px);
+  }
+
+  .ladder-card.special {
+    background: var(--ink);
+    border-color: var(--gold);
+    border-right-color: var(--gold);
+  }
+
+  .ladder-card.special:hover {
+    box-shadow: 4px 0 0 0 var(--gold-light), 0 8px 32px rgba(201,168,76,0.2);
+  }
+
+  /* step number bubble on the spine */
+  .ladder-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 1.75rem;
+    position: relative;
+    z-index: 2;
+  }
+
+  .step-bubble {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--gold-dark);
+    flex-shrink: 0;
+  }
+
+  .step-bubble.final {
+    background: var(--gold);
+    color: var(--ink);
+    border-color: var(--gold);
+    width: 40px;
+    height: 40px;
+    font-size: 0.8rem;
+  }
+
+  /* card internals */
+  .lc-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .lc-name {
+    font-family: monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--teal);
+    direction: ltr;
+    background: rgba(26,92,92,0.07);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+  }
+
+  .ladder-card.special .lc-name {
+    color: var(--gold);
+    background: rgba(201,168,76,0.12);
+  }
+
+  .lc-gain {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold-dark);
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 0.2rem 0.7rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .ladder-card.special .lc-gain {
+    color: var(--gold-light);
+    background: rgba(201,168,76,0.15);
+    border-color: rgba(201,168,76,0.4);
+  }
+
+  .lc-title-fa {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+
+  .ladder-card.special .lc-title-fa { color: var(--gold-light); }
+
+  .lc-oneliner {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+    line-height: 1.6;
+    border-right: 3px solid var(--gold);
+    padding-right: 0.75rem;
+  }
+
+  .ladder-card.special .lc-oneliner {
+    color: rgba(245,240,232,0.85);
+    border-right-color: var(--gold);
+  }
+
+  .lc-detail {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.75;
+  }
+
+  .ladder-card.special .lc-detail { color: rgba(245,240,232,0.45); }
+
+  .lc-analogy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .lc-analogy::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: var(--gold);
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    opacity: 0.7;
+  }
+
+  /* ─── PERFORMANCE TABLE ─── */
+  .perf-section { padding: 6rem 2rem; }
+  .perf-inner { max-width: 1100px; margin: 0 auto; }
+
+  .perf-table-wrap {
+    margin-top: 3rem;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  thead { background: var(--ink); }
+  thead th {
+    padding: 1rem 1.5rem;
+    color: var(--gold-light);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-align: right;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  tbody tr:hover { background: rgba(201,168,76,0.04); }
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody td {
+    padding: 1rem 1.5rem;
+    color: var(--text-muted);
+    vertical-align: middle;
+  }
+
+  tbody td:first-child { color: var(--ink); font-weight: 600; }
+
+  .tps-bar-wrap { display: flex; align-items: center; gap: 1rem; direction: ltr; }
+  .tps-bar {
+    height: 8px;
+    background: linear-gradient(to right, var(--gold-dark), var(--gold));
+    border-radius: 4px;
+    min-width: 4px;
+    transition: width 0.6s ease;
+  }
+  .tps-val { font-weight: 700; color: var(--ink); white-space: nowrap; font-size: 0.9rem; }
+
+  .multiplier {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gold-dark);
+  }
+
+  /* ─── PLATFORM SECTION ─── */
+  .platform-section { background: var(--ink); padding: 6rem 2rem; }
+  .platform-inner { max-width: 1100px; margin: 0 auto; }
+
+  .platform-section .section-label { color: var(--gold); }
+  .platform-section .section-label::after { background: var(--gold); }
+  .platform-section .section-title { color: var(--cream); }
+  .platform-section .section-body { color: rgba(245,240,232,0.5); }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    margin-top: 3rem;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.1);
+    overflow: hidden;
+  }
+
+  .service-card {
+    padding: 1.75rem;
+    background: var(--ink);
+    transition: background 0.3s;
+    position: relative;
+  }
+
+  .service-card:hover { background: #161616; }
+
+  .service-port {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: rgba(201,168,76,0.4);
+    margin-bottom: 0.5rem;
+    direction: ltr;
+  }
+
+  .service-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 0.5rem;
+    font-family: monospace;
+    direction: ltr;
+  }
+
+  .service-name-fa {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(245,240,232,0.7);
+    margin-bottom: 0.5rem;
+  }
+
+  .service-desc {
+    font-size: 0.8rem;
+    color: rgba(245,240,232,0.35);
+    line-height: 1.6;
+  }
+
+  .service-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal-light);
+    display: inline-block;
+    margin-left: 0.4rem;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(45,138,138,0.4); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(45,138,138,0); }
+  }
+
+  /* ─── INFRA STACK ─── */
+  .infra-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+  }
+
+  .infra-tag {
+    padding: 0.4rem 1rem;
+    border: 1px solid rgba(201,168,76,0.2);
+    background: rgba(201,168,76,0.04);
+    font-size: 0.8rem;
+    font-family: monospace;
+    color: var(--gold-light);
+    direction: ltr;
+    border-radius: 2px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .infra-tag:hover {
+    border-color: rgba(201,168,76,0.5);
+    background: rgba(201,168,76,0.1);
+  }
+
+  /* ─── BUSINESS STRATEGY ─── */
+  .strategy-section { padding: 6rem 2rem; background: var(--cream); }
+  .strategy-inner { max-width: 1100px; margin: 0 auto; }
+
+  .phases-timeline {
+    margin-top: 3rem;
+    position: relative;
+    padding-right: 2rem;
+  }
+
+  .phases-timeline::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+  }
+
+  .phase-item {
+    position: relative;
+    padding: 2rem 3rem 2rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-item:last-child { border-bottom: none; }
+
+  .phase-dot {
+    position: absolute;
+    right: -7px;
+    top: 2.3rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 2px solid var(--cream);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.3);
+  }
+
+  .phase-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--gold-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .phase-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .phase-desc { font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; max-width: 600px; }
+
+  .phase-items {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .phase-tag {
+    padding: 0.3rem 0.75rem;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  /* ─── TARGET / DANESHBONYAN ─── */
+  .target-section { padding: 6rem 2rem; }
+  .target-inner { max-width: 1100px; margin: 0 auto; }
+
+  .target-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 3rem; }
+
+  .checklist { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: border-color 0.2s;
+  }
+
+  .check-item:hover { border-color: var(--gold); }
+
+  .check-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--teal);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.1rem;
+  }
+
+  .check-icon svg { width: 10px; height: 10px; fill: none; stroke: white; stroke-width: 2.5; }
+
+  .check-text { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+
+  .hardware-card {
+    background: var(--ink);
+    padding: 2.5rem;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hardware-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 70% 30%, rgba(201,168,76,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .hardware-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .hardware-spec {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(201,168,76,0.1);
+    font-size: 0.85rem;
+  }
+
+  .hardware-spec:last-of-type { border-bottom: none; }
+  .hardware-spec-key { color: rgba(245,240,232,0.4); }
+  .hardware-spec-val { color: var(--gold-light); font-weight: 600; direction: ltr; }
+
+  .cost-highlight {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    text-align: center;
+  }
+
+  .cost-highlight .big { font-size: 2rem; font-weight: 900; color: var(--gold); display: block; }
+  .cost-highlight .small { font-size: 0.8rem; color: rgba(245,240,232,0.4); margin-top: 0.25rem; }
+
+  /* ─── STATUS SECTION ─── */
+  .status-section { background: var(--cream); padding: 6rem 2rem; }
+  .status-inner { max-width: 1100px; margin: 0 auto; }
+
+  .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+
+  .status-block {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 2rem;
+  }
+
+  .status-block h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .status-done { color: var(--teal); font-size: 1rem; }
+  .status-pending { color: var(--gold-dark); font-size: 1rem; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--ink);
+    padding: 4rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  footer::before {
+    content: 'DANA';
+    position: absolute;
+    font-size: 20vw;
+    font-weight: 900;
+    color: rgba(201,168,76,0.03);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    letter-spacing: 0.2em;
+    pointer-events: none;
+  }
+
+  .footer-logo {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-tagline {
+    font-size: 0.9rem;
+    color: rgba(245,240,232,0.3);
+    margin-bottom: 2rem;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-link {
+    font-size: 0.8rem;
+    color: rgba(245,240,232,0.3);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+
+  .footer-link:hover { color: var(--gold-light); }
+
+  .footer-copy {
+    font-size: 0.75rem;
+    color: rgba(245,240,232,0.15);
+  }
+
+  /* ─── PULL QUOTE ─── */
+  .pull-quote {
+    border-right: 4px solid var(--gold);
+    padding: 1.5rem 2rem;
+    background: rgba(201,168,76,0.05);
+    margin: 2rem 0;
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.7;
+    position: relative;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .vision-grid { grid-template-columns: 1fr; }
+    .stat-strip-inner { grid-template-columns: repeat(2, 1fr); }
+    .pillars-grid { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .target-grid { grid-template-columns: 1fr; }
+    .status-grid { grid-template-columns: 1fr; }
+    .hero-title { font-size: 3rem; }
+  }
+
+  /* ─── SCROLL ANIMATIONS ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════ HERO ════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="brand-mark">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="brand-name">Dana AI</span>
+    </div>
+    <h1 class="hero-title">
+      دانا
+      <span>موتور استنتاج هوش مصنوعی</span>
+    </h1>
+    <p class="hero-subtitle">
+      زیرساخت پیشرفته برای اجرای مدل‌های زبانی بزرگ روی سخت‌افزار مصرفی — ساخته شده در ایران، برای ایران
+    </p>
+    <div class="hero-badges">
+      <span class="badge">موتور MoE اختصاصی</span>
+      <span class="badge">بهینه‌سازی PCIe</span>
+      <span class="badge">۲۰۶ تست</span>
+      <span class="badge">سازگار با OpenAI API</span>
+      <span class="badge">دانش‌بنیان</span>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>بیشتر بخوانید</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ WOW MOMENTS ════════════════════════ -->
+<section class="wow-section">
+  <div class="wow-inner">
+    <div class="wow-label reveal">چرا دانا اهمیت دارد — چند سناریوی واقعی</div>
+    <div class="wow-grid">
+
+      <div class="wow-card reveal">
+        <div class="wow-avatar"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div class="wow-quote">
+          «دارم <span class="model-tag">Qwen3-235B</span> رو روی لپ‌تاپم اجرا می‌کنم.
+          فقط <strong>CPU + 64GB RAM</strong>. بدون GPU. بدون cloud.
+          <span class="wow-highlight">۸ tok/s.</span>
+          قبلاً فکرشم نمی‌کردم.»
+        </div>
+        <div class="wow-meta">
+          <div class="wow-meta-dot"></div>
+          توسعه‌دهنده مستقل · تهران
+        </div>
+      </div>
+
+      <div class="wow-card reveal" style="transition-delay:0.1s">
+        <div class="wow-avatar"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="wow-quote">
+          «با <strong>یه H100</strong> و موتور دانا دارم
+          <span class="model-tag">DeepSeek-V3 (671B)</span> رو می‌زنم.
+          <span class="wow-highlight">۴۵ tok/s single-user.</span>
+          Groq کجا بود؟»
+        </div>
+        <div class="wow-meta">
+          <div class="wow-meta-dot"></div>
+          ML Engineer · استارتاپ فین‌تک
+        </div>
+      </div>
+
+      <div class="wow-card reveal" style="transition-delay:0.2s">
+        <div class="wow-avatar"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M2 20h20"/></svg></div>
+        <div class="wow-quote">
+          «دو تا <span class="model-tag">RTX 4090</span> خریدم،
+          512GB DDR5 گذاشتم.
+          جمعاً <strong>$18K</strong>.
+          الان <span class="model-tag">Qwen3-235B</span> رو
+          <span class="wow-highlight">۳۰ tok/s</span> می‌زنم با ۱۰ user همزمان.»
+        </div>
+        <div class="wow-meta">
+          <div class="wow-meta-dot"></div>
+          CTO · شرکت نرم‌افزاری
+        </div>
+      </div>
+
+      <div class="wow-card reveal" style="transition-delay:0.05s">
+        <div class="wow-avatar"><svg viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></div>
+        <div class="wow-quote">
+          «دیگه به Groq وابسته نیستم.
+          همون <strong>سرعت Groq</strong> رو
+          روی سخت‌افزار خودم دارم—
+          <span class="wow-highlight">بدون تحریم، بدون latency، بدون هزینه cloud.</span>»
+        </div>
+        <div class="wow-meta">
+          <div class="wow-meta-dot"></div>
+          مدیر محصول · پلتفرم B2B
+        </div>
+      </div>
+
+      <div class="wow-card reveal" style="transition-delay:0.15s">
+        <div class="wow-avatar"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="wow-quote">
+          «یه سرور <strong>$45K</strong> خریدیم.
+          جایگزین کامل AWS Bedrock شد.
+          ماهانه <span class="wow-highlight">$12K صرفه‌جویی</span>—
+          سرور ۴ ماهه جبران شد.»
+        </div>
+        <div class="wow-meta">
+          <div class="wow-meta-dot"></div>
+          مدیر زیرساخت · سازمان دولتی
+        </div>
+      </div>
+
+      <div class="wow-card reveal" style="transition-delay:0.25s">
+        <div class="wow-avatar"><svg viewBox="0 0 24 24"><path d="M14.5 2v17.5c0 1.4-1.1 2.5-2.5 2.5h0c-1.4 0-2.5-1.1-2.5-2.5V2"/><path d="M8.5 2h7"/><path d="M14.5 16h-5"/></svg></div>
+        <div class="wow-quote">
+          «داریم روی <span class="model-tag">Kimi K2.5 (1T)</span>
+          تحقیق می‌کنیم. با موتور دانا
+          <strong>اصلاً نیاز به cluster نداریم</strong>—
+          <span class="wow-highlight">یه workstation کافیه.</span>»
+        </div>
+        <div class="wow-meta">
+          <div class="wow-meta-dot"></div>
+          محقق NLP · دانشگاه
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ PROBLEM & VISION ════════════════════ -->
+<section class="section reveal">
+  <div class="section-label">مسئله و راه‌حل</div>
+  <h2 class="section-title">چرا دانا؟</h2>
+  <p class="section-body">
+    مدل‌های زبانی نسل جدید مانند Qwen3-235B و DeepSeek-V3 از معماری MoE (Mixture of Experts) استفاده می‌کنند—یعنی در هر لحظه تنها ۵ تا ۱۵ درصد از پارامترها فعال می‌شوند. اما موتورهای موجود این مدل‌ها را مثل مدل‌های متراکم اجرا می‌کنند که باعث گلوگاه شدید روی PCIe می‌شود.
+  </p>
+
+  <div class="vision-grid reveal" style="transition-delay:0.2s">
+    <div class="vision-card">
+      <div class="vision-card-label">مشکل</div>
+      <h3>اجرای مدل‌های ۲۰۰ میلیارد پارامتری نیاز به H100 دارد؟</h3>
+      <p>برای اجرای مدل‌های بزرگ MoE با موتورهای فعلی، باید صدها هزار دلار صرف سخت‌افزار H100 کنید. این مانعی بزرگ برای توسعه‌دهندگان و استارتاپ‌های ایرانی است که به دلیل تحریم‌ها دسترسی به زیرساخت ابری آمریکایی ندارند.</p>
+    </div>
+    <div class="vision-card">
+      <div class="vision-card-label">راه‌حل دانا</div>
+      <h3>Qwen3-235B با ۳۰+ توکن/ثانیه روی یک ایستگاه کاری ۲۰ هزار دلاری</h3>
+      <p>با دو کارت RTX 4090 و ۵۱۲ گیگابایت RAM، دانا همان کارایی H100 را ارائه می‌دهد. نرم‌افزار، مزیت رقابتی است—نه سخت‌افزار. هر خط کد، R&D داخلی است.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════ STATS ════════════════════════════════ -->
+<div class="stat-strip">
+  <div class="stat-strip-inner">
+    <div class="stat-item reveal">
+      <span class="stat-number">×۱۳۰</span>
+      <span class="stat-label">بهبود نسبت به موتور ساده</span>
+    </div>
+    <div class="stat-item reveal" style="transition-delay:0.1s">
+      <span class="stat-number">۲۰۶</span>
+      <span class="stat-label">تست خودکار، زیر ۳۰ ثانیه</span>
+    </div>
+    <div class="stat-item reveal" style="transition-delay:0.2s">
+      <span class="stat-number">۷</span>
+      <span class="stat-label">ماژول مستقل و قابل انتشار</span>
+    </div>
+    <div class="stat-item reveal" style="transition-delay:0.3s">
+      <span class="stat-number">۸</span>
+      <span class="stat-label">سرویس بک‌اند پلتفرم</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════ PILLARS ════════════════════════════ -->
+<section class="pillars-section">
+  <div class="pillars-inner">
+    <div class="pillars-header reveal">
+      <div class="section-label">معماری فنی</div>
+      <h2 class="section-title">هفت لایه موتور دانا</h2>
+      <p class="section-body">
+        موتور دانا مثل یک نردبان است—هر پله یک مشکل مشخص را حل می‌کند و روی پله قبلی می‌نشیند. ۶ کتابخانه متن‌باز مستقل + یک هسته مرکزی خصوصی که همه را به هم وصل می‌کند.
+      </p>
+    </div>
+
+    <div class="ladder">
+
+      <!-- RUNG 1 -->
+      <div class="ladder-rung reveal">
+        <div class="ladder-card">
+          <div class="lc-header">
+            <span class="lc-name">tiered-tensor-store</span>
+            <span class="lc-gain">پایه زیرساخت</span>
+          </div>
+          <div class="lc-title-fa">ذخیره‌سازی سه‌لایه — GPU / RAM / SSD</div>
+          <div class="lc-oneliner">
+            وزن‌های مدل بر اساس نیاز بین GPU، RAM و SSD جابجا می‌شوند—بدون اینکه موتور استنتاج متوقف شود.
+          </div>
+          <div class="lc-detail">
+            مدل‌های MoE صدها گیگابایت وزن دارند که در VRAM جا نمی‌شوند. این ماژول یک سیستم سه‌طبقه درست می‌کند: <strong>GPU</strong> (0ms، داغ‌ترین)، <strong>RAM</strong> (~1ms)، <strong>SSD</strong> (~5ms). هر tensor در لایه مناسب خودش نگه‌داری می‌شه و background promoter اونا رو بر اساس میزان استفاده بالا یا پایین می‌بره.
+          </div>
+          <div class="lc-analogy">مثل یک کتابخانه‌ای که کتاب‌های پرمراجعه روی میز، بقیه در قفسه، و قدیمی‌ها در انبار هستن</div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble">۱</div></div>
+      </div>
+
+      <!-- RUNG 2 -->
+      <div class="ladder-rung reveal" style="transition-delay:0.05s">
+        <div class="ladder-card">
+          <div class="lc-header">
+            <span class="lc-name">expert-cache</span>
+            <span class="lc-gain">hit rate: ۶۰٪ → ۹۰٪+</span>
+          </div>
+          <div class="lc-title-fa">کش هوشمند متخصصان — فرکانس‌محور</div>
+          <div class="lc-oneliner">
+            به جای اینکه فقط آخرین expert استفاده‌شده را نگه داریم، آن‌هایی که <em>بیشتر</em> استفاده می‌شوند در VRAM باقی می‌مانند.
+          </div>
+          <div class="lc-detail">
+            در معماری MoE، مدل از میان صدها «expert» (زیر-شبکه تخصصی) انتخاب می‌کند. الگوریتم LRU ساده اغلب expert اشتباهی را حذف می‌کند. این ماژول با ردیابی فرکانس استفاده در یک پنجره زمانی، expert‌های پرتقاضا را در VRAM نگه می‌دارد. نسخه پیشرفته‌تر (PredictiveExpertCache) حتی از قبل حدس می‌زند چه expert‌هایی لازم می‌شوند.
+          </div>
+          <div class="lc-analogy">مثل یک میزکار که پرونده‌های پرکار روی آن باز هستند، نه فقط آخرین پرونده‌ای که باز شده</div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble">۲</div></div>
+      </div>
+
+      <!-- RUNG 3 -->
+      <div class="ladder-rung reveal" style="transition-delay:0.1s">
+        <div class="ladder-card">
+          <div class="lc-header">
+            <span class="lc-name">moe-router-predict</span>
+            <span class="lc-gain">تخمین ×۵ بهبود</span>
+          </div>
+          <div class="lc-title-fa">پیش‌بارگذاری ناهمزمان — قبل از اینکه نیاز باشد</div>
+          <div class="lc-oneliner">
+            قبل از اینکه محاسبه به لایه بعدی برسد، expert‌های مورد نیاز را در پس‌زمینه از RAM به GPU منتقل می‌کند.
+          </div>
+          <div class="lc-detail">
+            بزرگ‌ترین گلوگاه موتورهای MoE اینه که CPU باید صبر کنه تا expert از RAM به GPU منتقل بشه (~1ms). این ماژول فقط بخش کوچکی از router (گیت لینیار) رو N گام جلوتر اجرا می‌کند تا بفهمه چه expert‌هایی لازم میشه، و از همون لحظه انتقال async DMA رو شروع می‌کنه. وقتی GPU به اون expert نیاز داره، قبلاً آماده‌ست.
+          </div>
+          <div class="lc-analogy">مثل یک بارتندار که سفارش بعدی مشتری را قبل از اتمام لیوان آماده می‌کند</div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble">۳</div></div>
+      </div>
+
+      <!-- RUNG 4 -->
+      <div class="ladder-rung reveal" style="transition-delay:0.15s">
+        <div class="ladder-card">
+          <div class="lc-header">
+            <span class="lc-name">moe-quant</span>
+            <span class="lc-gain">تخمین ×۲.۵ بهبود</span>
+          </div>
+          <div class="lc-title-fa">فشرده‌سازی هوشمند — هر expert به اندازه کافی دقیق</div>
+          <div class="lc-oneliner">
+            expert‌هایی که در GPU هستند با دقت بالا (Q8)، در RAM با دقت متوسط (Q4)، و در SSD با فشرده‌سازی ۱۶× (Q2) ذخیره می‌شوند.
+          </div>
+          <div class="lc-detail">
+            quantization یعنی ذخیره وزن‌ها با اعداد کوچک‌تر: <strong>Q8</strong> = 4× کوچک‌تر، <strong>Q4</strong> = 8× کوچک‌تر، <strong>Q2</strong> = 16× کوچک‌تر. هر expert بر اساس «حساسیت» آن (تأثیر روی کیفیت خروجی) یک سطح quantization دریافت می‌کند—expert‌های حساس Q8 می‌گیرند، بقیه می‌توانند Q2 باشند. نتیجه: انتقال از SSD 4× سریع‌تر، VRAM 2× بیشتر در دسترس.
+          </div>
+          <div class="lc-analogy">مثل ارسال فایل‌ها با ZIP—آن‌هایی که کمتر مهم هستند بیشتر فشرده می‌شوند</div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble">۴</div></div>
+      </div>
+
+      <!-- RUNG 5 -->
+      <div class="ladder-rung reveal" style="transition-delay:0.2s">
+        <div class="ladder-card">
+          <div class="lc-header">
+            <span class="lc-name">moe-self-draft</span>
+            <span class="lc-gain">تخمین ×۳ بهبود</span>
+          </div>
+          <div class="lc-title-fa">speculative decoding — پیش‌نویس با خودِ مدل</div>
+          <div class="lc-oneliner">
+            همان مدل ۲۳۵ میلیارد پارامتری در حالت سبک‌تر (top-1 routing به جای top-2) چند توکن پیش‌نویس می‌زند، سپس مدل اصلی همه را یکجا تأیید می‌کند.
+          </div>
+          <div class="lc-detail">
+            ایده speculative decoding اینه: به جای تولید یک توکن در هر بار forward pass، یک «مدل پیش‌نویس» سریع‌تر چند توکن حدس می‌زند، و مدل اصلی همه رو با هم تأیید یا رد می‌کند. معمولاً باید مدل کوچک‌تر جداگانه‌ای نگه‌داری کنید. دانا این مشکل را حل کرده: همان مدل بزرگ را در حالت «تنبل» (فقط یک expert به جای دو expert در هر لایه) به عنوان پیش‌نویس استفاده می‌کند. نرخ پذیرش: ~۸۵٪ روی متن عادی = ~۴ توکن در هر verify pass.
+          </div>
+          <div class="lc-analogy">مثل یک استاد که شاگرد خودش را برای پیش‌نویس استفاده می‌کند—همان آدم، تلاش کمتر</div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble">۵</div></div>
+      </div>
+
+      <!-- RUNG 6 -->
+      <div class="ladder-rung reveal" style="transition-delay:0.25s">
+        <div class="ladder-card">
+          <div class="lc-header">
+            <span class="lc-name">spec-decode-tree</span>
+            <span class="lc-gain">×۴+ توکن/گذر</span>
+          </div>
+          <div class="lc-title-fa">tree speculative decoding — پیش‌بینی چند شاخه‌ای</div>
+          <div class="lc-oneliner">
+            به جای یک زنجیره خطی از حدس‌ها، یک درخت از مسیرهای احتمالی ساخته می‌شود—مدل اصلی کل درخت را در یک forward pass تأیید می‌کند.
+          </div>
+          <div class="lc-detail">
+            پله ۵ (self-draft) یک زنجیر خطی از توکن‌ها می‌سازد. این پله آن را به یک «درخت» گسترش می‌دهد: در هر گام چند گزینه محتمل بعدی در نظر می‌گیرد و شاخه‌های مختلف را می‌سازد. مدل اصلی همه برگ‌های درخت را با هم verify می‌کند. depth و width درخت بر اساس نرخ پذیرش واقعی به صورت adaptive تنظیم می‌شود—وقتی مدل خوب حدس می‌زند، درخت عمیق‌تر می‌شود؛ وقتی اشتباه می‌کند، کوچک‌تر.
+          </div>
+          <div class="lc-analogy">مثل یک شطرنج‌باز که چند حرکت آینده را همزمان در ذهن می‌چرخاند</div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble">۶</div></div>
+      </div>
+
+      <!-- RUNG 7 — SPECIAL -->
+      <div class="ladder-rung reveal" style="transition-delay:0.3s">
+        <div class="ladder-card special">
+          <div class="lc-header">
+            <span class="lc-name">dana-engine</span>
+            <span class="lc-gain">🔒 خصوصی — مزیت رقابتی</span>
+          </div>
+          <div class="lc-title-fa">یکپارچه‌ساز مرکزی — همه پله‌ها با هم</div>
+          <div class="lc-oneliner">
+            هسته اصلی که ۶ کتابخانه بالا را به هم وصل می‌کند و یک API سازگار با OpenAI روی آن می‌سازد—با قابلیت پردازش درخواست‌های چند کاربر به صورت همزمان.
+          </div>
+          <div class="lc-detail">
+            این لایه چند کار اضافه انجام می‌دهد که کتابخانه‌های عمومی نمی‌توانند: <strong>Expert-Aware Batching</strong>—درخواست‌هایی که expert‌های مشترک دارند را با هم در یک batch پردازش می‌کند (با الگوریتم Jaccard similarity). این یعنی ۱۰ کاربر همزمان با هم بهتر از ۱۰ کاربر جداگانه هستند. به اضافه یک <strong>HTTP API server</strong> سازگار با OpenAI (FastAPI) که می‌توانید با همان کد کلاینت‌های ChatGPT از آن استفاده کنید.
+            <br><br>
+            این لایه هرگز به صورت open-source منتشر نمی‌شود—همین است که موتور دانا را به یک محصول تبدیل می‌کند.
+          </div>
+        </div>
+        <div class="ladder-step"><div class="step-bubble final">۷</div></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════ PERFORMANCE ════════════════════════ -->
+<section class="perf-section">
+  <div class="perf-inner reveal">
+    <div class="section-label">عملکرد پیش‌بینی‌شده</div>
+    <h2 class="section-title">از ۰.۵ به ۶۵ توکن/ثانیه</h2>
+    <p class="section-body">
+      پیشرفت تجمعی با فعال‌سازی تدریجی هر لایه روی Qwen3-235B (A100 80GB + PCIe 4.0):
+    </p>
+
+    <div class="perf-table-wrap reveal" style="transition-delay:0.2s">
+      <table>
+        <thead>
+          <tr>
+            <th>مرحله بهینه‌سازی</th>
+            <th>TPS (توکن/ثانیه)</th>
+            <th>ضریب بهبود</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>استنتاج ساده (baseline)</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:3px"></div>
+                <span class="tps-val">۰.۵</span>
+              </div>
+            </td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>+ پیش‌بارگذاری متخصصان</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:19px"></div>
+                <span class="tps-val">۲.۵</span>
+              </div>
+            </td>
+            <td><span class="multiplier">×۵</span></td>
+          </tr>
+          <tr>
+            <td>+ کش فرکانسی</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:46px"></div>
+                <span class="tps-val">۶</span>
+              </div>
+            </td>
+            <td><span class="multiplier">×۲.۴</span></td>
+          </tr>
+          <tr>
+            <td>+ کوانتیزاسیون</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:115px"></div>
+                <span class="tps-val">۱۵</span>
+              </div>
+            </td>
+            <td><span class="multiplier">×۲.۵</span></td>
+          </tr>
+          <tr>
+            <td>+ self-draft speculative</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:230px"></div>
+                <span class="tps-val">۴۵</span>
+              </div>
+            </td>
+            <td><span class="multiplier">×۳</span></td>
+          </tr>
+          <tr>
+            <td>+ رمزگشایی درختی</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:300px"></div>
+                <span class="tps-val">۶۵</span>
+              </div>
+            </td>
+            <td><span class="multiplier">×۱.۴</span></td>
+          </tr>
+          <tr>
+            <td>+ ۱۰ درخواست همزمان (هر کاربر)</td>
+            <td>
+              <div class="tps-bar-wrap">
+                <div class="tps-bar" style="width:230px"></div>
+                <span class="tps-val">۳۰/کاربر</span>
+              </div>
+            </td>
+            <td><span class="multiplier">بار مشترک</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pull-quote reveal" style="transition-delay:0.3s">
+      جمع بهبود تک کاربره: <strong>×۱۰۰ تا ×۱۳۰</strong> نسبت به موتور ساده—نه با تغییر سخت‌افزار، بلکه فقط با نرم‌افزار.
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ PLATFORM ════════════════════════════ -->
+<section class="platform-section">
+  <div class="platform-inner">
+    <div class="reveal">
+      <div class="section-label">پلتفرم API</div>
+      <h2 class="section-title">زیرساخت کامل سرویس‌دهی</h2>
+      <p class="section-body">
+        علاوه بر موتور استنتاج، دانا یک پلتفرم API کامل دارد—شبیه OpenAI API اما ایرانی، با پرداخت زرین‌پال و احراز هویت بومی.
+      </p>
+    </div>
+
+    <div class="services-grid reveal" style="transition-delay:0.2s">
+      <div class="service-card">
+        <div class="service-port">:8000</div>
+        <div class="service-name">api-gateway</div>
+        <div class="service-name-fa"><span class="service-dot"></span>دروازه اصلی API</div>
+        <p class="service-desc">مسیریابی درخواست، rate limiting، سازگاری با OpenAI API</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">:8001</div>
+        <div class="service-name">auth-service</div>
+        <div class="service-name-fa"><span class="service-dot"></span>احراز هویت</div>
+        <p class="service-desc">ثبت‌نام، ورود، توکن HMAC-SHA512، مدیریت کلیدهای API</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">:8002</div>
+        <div class="service-name">inference-router</div>
+        <div class="service-name-fa"><span class="service-dot"></span>روتر استنتاج</div>
+        <p class="service-desc">مسیریابی درخواست به workers از طریق RabbitMQ</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">:8004</div>
+        <div class="service-name">billing-service</div>
+        <div class="service-name-fa"><span class="service-dot"></span>صورتحساب</div>
+        <p class="service-desc">پلان‌ها، محاسبه مصرف، یکپارچه‌سازی زرین‌پال</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">:8005</div>
+        <div class="service-name">analytics-service</div>
+        <div class="service-name-fa"><span class="service-dot"></span>تحلیل داده</div>
+        <p class="service-desc">جمع‌آوری رویدادها، pipeline ClickHouse، پایش کیفیت</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">:8006</div>
+        <div class="service-name">model-registry</div>
+        <div class="service-name-fa"><span class="service-dot"></span>رجیستری مدل</div>
+        <p class="service-desc">CRUD متادیتای مدل، نسخه‌بندی</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">:8007</div>
+        <div class="service-name">finetuning-service</div>
+        <div class="service-name-fa"><span class="service-dot"></span>فاین‌تیونینگ</div>
+        <p class="service-desc">آموزش LoRA/QLoRA با PEFT، نرمال‌سازی متن فارسی</p>
+      </div>
+      <div class="service-card">
+        <div class="service-port">Web</div>
+        <div class="service-name">Next.js 15 Frontend</div>
+        <div class="service-name-fa"><span class="service-dot"></span>رابط کاربری</div>
+        <p class="service-desc">صفحه فرود، داشبورد، مستندات API، زمین بازی تعاملی</p>
+      </div>
+    </div>
+
+    <div class="reveal" style="transition-delay:0.3s">
+      <p style="font-size:0.85rem; color:rgba(245,240,232,0.4); margin-top:2rem; margin-bottom:1rem;">زیرساخت:</p>
+      <div class="infra-strip">
+        <span class="infra-tag">PostgreSQL 16</span>
+        <span class="infra-tag">Redis 7</span>
+        <span class="infra-tag">RabbitMQ 3</span>
+        <span class="infra-tag">ClickHouse</span>
+        <span class="infra-tag">MinIO</span>
+        <span class="infra-tag">Prometheus</span>
+        <span class="infra-tag">Grafana</span>
+        <span class="infra-tag">Kubernetes</span>
+        <span class="infra-tag">Docker Compose</span>
+        <span class="infra-tag">GitHub Actions CI/CD</span>
+        <span class="infra-tag">ZarinPal</span>
+        <span class="infra-tag">Metabase</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ STRATEGY ════════════════════════════ -->
+<section class="strategy-section">
+  <div class="strategy-inner">
+    <div class="reveal">
+      <div class="section-label">استراتژی کسب‌وکار</div>
+      <h2 class="section-title">ایده‌های استراتژیک</h2>
+      <p class="section-body">
+        تصمیم قطعی درباره مدل انتشار (open-source، closed-source یا ترکیبی) هنوز گرفته نشده. آنچه در ادامه می‌آید <strong>سناریوهای مارکتینگ و کسب‌وکار</strong> است که روی میز هستند—نه تصمیم نهایی.
+      </p>
+      <p class="section-body" style="margin-top:0.75rem; font-size:0.88rem; color:var(--rust); border-right: 3px solid var(--rust); padding-right:1rem;">
+        این بخش فرضی است. تیم هنوز در حال ارزیابی گزینه‌های مختلف go-to-market است.
+      </p>
+    </div>
+
+    <div class="phases-timeline reveal" style="transition-delay:0.2s">
+      <div class="phase-item">
+        <div class="phase-dot"></div>
+        <div class="phase-num">سناریو ۱ — اثبات و پذیرش ویروسی</div>
+        <h3 class="phase-title">گزینه: انتشار متن‌باز تک‌کاربره</h3>
+        <p class="phase-desc">موتور تک‌کاربره روی GitHub منتشر شود تحت AGPL-3.0. محدودیت ۱ کاربر همزمان، هرگونه استفاده API تجاری رقیب را می‌بندد. پتانسیل: پذیرش ویروسی در GitHub و جذب سرمایه seed.</p>
+        <div class="phase-items">
+          <span class="phase-tag">ایده، نه تصمیم</span>
+          <span class="phase-tag">AGPL-3.0</span>
+          <span class="phase-tag">۶ کتابخانه مستقل</span>
+        </div>
+      </div>
+
+      <div class="phase-item">
+        <div class="phase-dot"></div>
+        <div class="phase-num">سناریو ۲ — لایه مزیت رقابتی</div>
+        <h3 class="phase-title">Expert-Aware Batching چند کاربره</h3>
+        <p class="phase-desc">صرف‌نظر از تصمیم OSS، لایه batching چند کاربره (Jaccard similarity) یک مزیت رقابتی کلیدی است. این لایه توانایی سرویس‌دهی به چند کاربر همزمان را فعال می‌کند و جایی است که ارزش تجاری واقعی نهفته است.</p>
+        <div class="phase-items">
+          <span class="phase-tag">Jaccard Similarity Batching</span>
+          <span class="phase-tag">Multi-user Concurrency</span>
+          <span class="phase-tag">مزیت رقابتی اصلی</span>
+        </div>
+      </div>
+
+      <div class="phase-item">
+        <div class="phase-dot"></div>
+        <div class="phase-num">سناریو ۳ — جریان‌های درآمدی احتمالی</div>
+        <h3 class="phase-title">چند کانال درآمدی</h3>
+        <p class="phase-desc">Developer API (freemium)، لایسنس Enterprise (VPC)، سرورهای سخت‌افزاری مدیریت‌شده، و SDK برای بازی‌های offline. هر کانال از مزیت بهینه‌سازی نرم‌افزاری استفاده می‌کند.</p>
+        <div class="phase-items">
+          <span class="phase-tag">API: رایگان / $29 / سفارشی</span>
+          <span class="phase-tag">سرور $45K</span>
+          <span class="phase-tag">لایسنس Enterprise</span>
+          <span class="phase-tag">SDK بازی</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ TARGET & HARDWARE ═══════════════════ -->
+<section class="target-section">
+  <div class="target-inner">
+    <div class="reveal">
+      <div class="section-label">بازار هدف و سخت‌افزار</div>
+      <h2 class="section-title">ایران‌محور، دانش‌بنیان</h2>
+    </div>
+    <div class="target-grid reveal" style="transition-delay:0.2s">
+
+      <div>
+        <p class="section-body" style="margin-bottom:1.5rem">
+          بازار اصلی: توسعه‌دهندگان، شرکت‌ها و محققان ایرانی که به هوش مصنوعی پیشرفته بدون وابستگی به زیرساخت ابری آمریکایی، آسیب‌پذیری از تحریم، یا تأخیر بالا نیاز دارند.
+        </p>
+        <div class="checklist">
+          <div class="check-item">
+            <div class="check-icon"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="check-text">الگوریتم speculative decoding اختصاصی — شرط دانش‌بنیان</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="check-text">offloading متخصصان MoE — امتیاز بالا در دانش‌بنیان</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="check-text">موتور توکن HMAC-SHA512 اختصاصی</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="check-text">rate limiter و تشخیص ناهنجاری اختصاصی</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="check-text">pipeline بنچمارک خودکار + ۲۰۶ تست pytest</span>
+          </div>
+          <div class="check-item">
+            <div class="check-icon"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+            <span class="check-text">دیپلوی Kubernetes + CI/CD</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hardware-card">
+        <h3>مشخصات گره API</h3>
+        <div class="hardware-spec">
+          <span class="hardware-spec-key">پردازنده</span>
+          <span class="hardware-spec-val">Threadripper Pro</span>
+        </div>
+        <div class="hardware-spec">
+          <span class="hardware-spec-key">حافظه</span>
+          <span class="hardware-spec-val">512GB DDR5</span>
+        </div>
+        <div class="hardware-spec">
+          <span class="hardware-spec-key">GPU</span>
+          <span class="hardware-spec-val">2× RTX 6000 Ada</span>
+        </div>
+        <div class="hardware-spec">
+          <span class="hardware-spec-key">توان‌دهی</span>
+          <span class="hardware-spec-val">30 TPS/کاربر @ ۱۰ همزمان</span>
+        </div>
+        <div class="cost-highlight">
+          <span class="big">$20,000</span>
+          <span class="small">در مقابل $200,000+ برای H100</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ STATUS ══════════════════════════════ -->
+<section class="status-section">
+  <div class="status-inner">
+    <div class="reveal">
+      <div class="section-label">وضعیت فعلی پروژه</div>
+      <h2 class="section-title">کجا ایستاده‌ایم؟</h2>
+      <p class="section-body">
+        موتور و پلتفرم هر دو از نظر قابلیت کامل هستند. مرحله بعدی: اعتبارسنجی روی GPU واقعی و آماده‌سازی برای استقرار تولیدی.
+      </p>
+    </div>
+    <div class="status-grid reveal" style="transition-delay:0.2s">
+
+      <div class="status-block">
+        <h3>موتور — تکمیل شده</h3>
+        <div class="status-list">
+          <div class="status-row"><span class="status-done">✓</span> تمام ۶ کتابخانه پیاده‌سازی شده</div>
+          <div class="status-row"><span class="status-done">✓</span> یکپارچه‌ساز مرکزی (dana-engine)</div>
+          <div class="status-row"><span class="status-done">✓</span> API سرور FastAPI سازگار با OpenAI</div>
+          <div class="status-row"><span class="status-done">✓</span> ۲۰۶ تست CPU در کمتر از ۳۰ ثانیه</div>
+          <div class="status-row"><span class="status-done">✓</span> مدل تست مصنوعی TinyMoE</div>
+          <div class="status-row"><span class="status-done">✓</span> Batch آگاه به متخصصان (Jaccard)</div>
+        </div>
+      </div>
+
+      <div class="status-block">
+        <h3>موتور — نیاز به GPU</h3>
+        <div class="status-list">
+          <div class="status-row"><span class="status-pending">○</span> اتصال مدل واقعی Qwen3-30B</div>
+          <div class="status-row"><span class="status-pending">○</span> اندازه‌گیری پهنای باند واقعی PCIe</div>
+          <div class="status-row"><span class="status-pending">○</span> async H2D با torch.cuda.Stream</div>
+          <div class="status-row"><span class="status-pending">○</span> CUDA kernel برای Q2/Q4</div>
+          <div class="status-row"><span class="status-pending">○</span> تست فشار ۱۰+ درخواست همزمان</div>
+        </div>
+      </div>
+
+      <div class="status-block">
+        <h3>پلتفرم — تکمیل شده</h3>
+        <div class="status-list">
+          <div class="status-row"><span class="status-done">✓</span> تمام ۸ سرویس بک‌اند</div>
+          <div class="status-row"><span class="status-done">✓</span> Docker Compose stack</div>
+          <div class="status-row"><span class="status-done">✓</span> manifests Kubernetes</div>
+          <div class="status-row"><span class="status-done">✓</span> Prometheus + Grafana</div>
+          <div class="status-row"><span class="status-done">✓</span> یکپارچه‌سازی ZarinPal</div>
+          <div class="status-row"><span class="status-done">✓</span> صفحه فرود + مستندات API</div>
+        </div>
+      </div>
+
+      <div class="status-block">
+        <h3>پلتفرم — برای تولید لازم است</h3>
+        <div class="status-list">
+          <div class="status-row"><span class="status-pending">○</span> Dockerfile سرویس فاین‌تیونینگ</div>
+          <div class="status-row"><span class="status-pending">○</span> تنظیم SMTP (تأیید ایمیل)</div>
+          <div class="status-row"><span class="status-pending">○</span> OAuth (Google, GitHub)</div>
+          <div class="status-row"><span class="status-pending">○</span> دیتاست فارسی برای فاین‌تیون</div>
+          <div class="status-row"><span class="status-pending">○</span> DNS/CDN ایرانی + SSL</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════ FOOTER ══════════════════════════════ -->
+<footer>
+  <div class="footer-logo">DANA</div>
+  <p class="footer-tagline">موتور استنتاج هوش مصنوعی ایرانی — نرم‌افزار، مزیت رقابتی است</p>
+  <div class="footer-links">
+    <a href="#" class="footer-link">موتور</a>
+    <a href="#" class="footer-link">پلتفرم</a>
+    <a href="#" class="footer-link">مستندات</a>
+    <a href="#" class="footer-link">GitHub</a>
+  </div>
+  <p class="footer-copy">© ۱۴۰۴ — دانا</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // Animate TPS bars on scroll
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.querySelectorAll('.tps-bar').forEach(bar => {
+          const w = bar.style.width;
+          bar.style.width = '0';
+          setTimeout(() => { bar.style.width = w; }, 100);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const table = document.querySelector('.perf-table-wrap');
+  if (table) barObserver.observe(table);
+</script>
+</body>
+</html>
