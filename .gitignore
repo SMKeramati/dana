@@ -12,3 +12,15 @@ build/
 *.tsbuildinfo
 web/landing/.next/
 web/landing/node_modules/
+
+# secrets / OS junk
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# local-only runtime
+models/
+reports/
+.venv/
+uv.lock.bak
