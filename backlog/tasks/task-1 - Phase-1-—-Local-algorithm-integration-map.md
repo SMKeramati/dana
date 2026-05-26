@@ -1,9 +1,10 @@
 ---
 id: TASK-1
 title: 'Phase 1 — Local: algorithm + integration map'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-05-26 06:32'
+updated_date: '2026-05-26 07:21'
 labels: []
 dependencies: []
 priority: high

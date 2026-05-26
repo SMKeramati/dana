@@ -1,0 +1,38 @@
+[project]
+name = "dana"
+version = "0.1.0"
+description = "MoE inference optimization plugins for vLLM — per-expert quant, MoE-aware spec decode, self-draft, router prefetch"
+readme = "PHASE_1_LOCAL.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "moe-quant",
+    "moe-self-draft",
+    "spec-decode-tree",
+    "moe-router-predict",
+]
+
+[tool.uv.workspace]
+members = ["engine/moe-quant", "engine/moe-self-draft", "engine/spec-decode-tree", "engine/moe-router-predict"]
+
+[tool.uv.sources]
+moe-quant = { workspace = true }
+moe-self-draft = { workspace = true }
+spec-decode-tree = { workspace = true }
+moe-router-predict = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-benchmark>=4.0",
+    "ruff>=0.5",
+    "mypy>=1.10",
+    "huggingface-hub>=0.24",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["engine"]
+addopts = "--tb=short -q"
