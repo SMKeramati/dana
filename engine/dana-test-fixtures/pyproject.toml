@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dana-test-fixtures"
+version = "0.1.0"
+description = "Synthetic tiny MoE used as a test fixture by the dana plugin packages. Not shipped, not the inference engine."
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

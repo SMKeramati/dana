@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
-# Phase 1 Day 1 — llama.cpp Metal baseline for Qwen3.5-35B-A3B Q4_K_M
+# Phase 1 Day 1 — llama.cpp Metal baseline.
+# Default model: Qwen3.5-4B Q4_K_M (~2.5 GB, fits 19 GB free).
+# The 35B-A3B is deferred to Phase 2 (won't fit M1 disk).
+# Override with: MODEL_DIR=models/qwen35-4b ./scripts/p1_d1_baseline.sh
 # Gates: coherent output, >= 8 tok/s, peak RAM < 14 GB
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MODEL=$(ls models/qwen35-35b-a3b/*Q4_K_M*.gguf 2>/dev/null | head -1)
-[ -z "$MODEL" ] && { echo "ERROR: no Q4_K_M gguf under models/qwen35-35b-a3b/"; exit 1; }
+MODEL_DIR="${MODEL_DIR:-models/qwen35-4b}"
+MODEL=$(ls "$MODEL_DIR"/*Q4_K_M*.gguf 2>/dev/null | head -1)
+[ -z "$MODEL" ] && { echo "ERROR: no Q4_K_M gguf under $MODEL_DIR/"; echo "  hf download unsloth/Qwen3.5-4B-GGUF --include '*Q4_K_M*' --local-dir $MODEL_DIR"; exit 1; }
 
 OUT=reports/llamacpp_baseline.txt
 PROMPT="Explain mixture-of-experts in one paragraph:"

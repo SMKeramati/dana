@@ -12,13 +12,14 @@ dependencies = [
 ]
 
 [tool.uv.workspace]
-members = ["engine/moe-quant", "engine/moe-self-draft", "engine/spec-decode-tree", "engine/moe-router-predict"]
+members = ["engine/moe-quant", "engine/moe-self-draft", "engine/spec-decode-tree", "engine/moe-router-predict", "engine/dana-test-fixtures"]
 
 [tool.uv.sources]
 moe-quant = { workspace = true }
 moe-self-draft = { workspace = true }
 spec-decode-tree = { workspace = true }
 moe-router-predict = { workspace = true }
+dana-test-fixtures = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -27,6 +28,8 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
     "huggingface-hub>=0.24",
+    "dana-test-fixtures",
+    "pytest-asyncio>=1.3.0",
 ]
 
 [tool.ruff]
@@ -35,4 +38,8 @@ target-version = "py311"
 
 [tool.pytest.ini_options]
 testpaths = ["engine"]
-addopts = "--tb=short -q"
+addopts = "--tb=short -q --import-mode=importlib"
+asyncio_mode = "auto"
+markers = [
+    "asyncio: async test using pytest-asyncio",
+]

@@ -21,6 +21,10 @@ web/landing/node_modules/
 
 # local-only runtime
 models/
-reports/
 .venv/
 uv.lock.bak
+
+# reports — keep summaries tracked, ignore raw logs only
+reports/*.log
+reports/*.jsonl
+reports/*.bin
